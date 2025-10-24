@@ -1,0 +1,68 @@
+@font-face {
+    font-family: 'DejaVu Sans';
+    src: url(https://example.com/fonts/DejaVuSans.ttf); /* Замените на реальный путь к шрифту с поддержкой кириллицы, доступный для WeasyPrint */
+}
+
+body {
+    font-family: 'DejaVu Sans', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #333;
+}
+
+h1, h2, h3 {
+    font-weight: bold;
+    color: #000;
+}
+
+h1 {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.stats-table td:first-child {
+    font-weight: bold;
+    width: 40%;
+}
+
+.incorrect-answers {
+    margin-top: 30px;
+    page-break-before: auto;
+}
+
+.question-block {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #eee;
+}
+
+.question-text {
+    font-weight: bold;
+}
+
+.user-answer {
+    color: #d9534f; /* red */
+}
+
+.correct-answer {
+    color: #5cb85c; /* green */
+}

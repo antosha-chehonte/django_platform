@@ -1,0 +1,31 @@
+{# templates/moderator/question_set_form.html #}
+
+{% extends "apps_testing/moderator/base.html" %}
+
+{% block moderator_content %}
+<h1>{% if form.instance.pk %}Редактирование набора{% else %}Создание нового набора{% endif %}</h1>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn btn-success">Сохранить</button>
+            <a href="{% url 'moderator:qset_list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock moderator_content %}

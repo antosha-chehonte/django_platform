@@ -1,0 +1,62 @@
+{# templates/moderator/result_list.html #}
+
+{% extends "apps_testing/moderator/base.html" %}
+
+{% block moderator_content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Результаты тестирования</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="get" class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Дата c</label>
+                    {{ filter_form.date_from }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Дата по</label>
+                    {{ filter_form.date_to }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Участник</label>
+                    {{ filter_form.participant }}
+                </div>
+                <div class="col-md-2 d-flex flex-column align-items-stretch gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+                    <a href="{% url 'moderator:result_list' %}" class="btn btn-outline-secondary w-100">Сбросить</a>
+                </div>
+            </form>
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>Участник</th>
+                    <th>Тест</th>
+                    <th>Дата</th>
+                    <th>Результат, %</th>
+                    <th class="text-end">Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.session.get_full_name }}</td>
+                        <td>{{ result.session.test.title }}</td>
+                        <td>{{ result.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>                                {{ result.percentage }}%</td>
+                        <td class="text-end">
+                            <a href="{% url 'moderator:export_pdf' result.pk %}" class="btn btn-sm btn-info"
+                               target="_blank">PDF</a>
+                            <a href="{% url 'moderator:result_delete' result.pk %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-danger">Удалить</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Пока нет ни одного результата.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock moderator_content %}

@@ -1,0 +1,49 @@
+{# templates/moderator/app_testing_base.html#}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="d-flex flex-column flex-shrink-0 p-3 bg-light" style="min-height: 80vh;">
+            <a href="{% url 'moderator:dashboard' %}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+                <span class="fs-4">Панель модератора</span>
+            </a>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{% url 'moderator:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% else %}link-dark{% endif %}" aria-current="page">
+                        Главная
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'moderator:qset_list' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'qset_list' or request.resolver_match.url_name == 'qset_create' or request.resolver_match.url_name == 'qset_update' or request.resolver_match.url_name == 'qset_delete' or request.resolver_match.url_name == 'question_list' or request.resolver_match.url_name == 'question_create' or request.resolver_match.url_name == 'question_update' or request.resolver_match.url_name == 'question_delete' %}active{% else %}link-dark{% endif %}">
+                        Наборы вопросов
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'moderator:test_list' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'test_list' or request.resolver_match.url_name == 'test_create' or request.resolver_match.url_name == 'test_update' or request.resolver_match.url_name == 'test_delete' %}active{% else %}link-dark{% endif %}">
+                        Тесты
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'moderator:result_list' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'result_list' or request.resolver_match.url_name == 'result_delete' or request.resolver_match.url_name == 'export_pdf' %}active{% else %}link-dark{% endif %}">
+                        Результаты
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'moderator:question_error_analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'question_error_analytics' %}active{% else %}link-dark{% endif %}">
+                        Аналитика ошибок
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-9">
+        {% block moderator_content %}
+        {% endblock moderator_content %}
+    </div>
+</div>
+{% endblock content %}

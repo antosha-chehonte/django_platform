@@ -1,0 +1,244 @@
+{# templates/tests/test_start.html #}
+
+{% extends 'apps_testing/app_testing_base.html' %}
+{% load static %}
+
+{% block title %}Тестирование: {{ session.test.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ session.test.title }}</h5>
+        <div id="timer" class="fs-4 fw-bold text-danger">--:--</div>
+    </div>
+    <div class="card-body">
+        <div class="progress mb-4" role="progressbar">
+            <div id="progress-bar" class="progress-bar" style="width: 0%">0 / ?</div>
+        </div>
+
+        <div id="question-container">
+            <!-- Сюда будет загружаться вопрос через AJAX -->
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <button id="skip-btn" class="btn btn-warning">Пропустить</button>
+        <div>
+            <button id="prev-btn" class="btn btn-secondary" disabled>Назад</button>
+            <button id="next-btn" class="btn btn-primary">Далее</button>
+        </div>
+        <button id="finish-btn" class="btn btn-danger">Завершить тест</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- Configuration ---
+    const config = {
+        serverEndTime: new Date("{{ server_end_time }}"),
+        getQuestionUrl: "{% url 'testing:ajax_get_question' %}",
+        saveAnswerUrl: "{% url 'testing:ajax_save_answer' %}",
+        finishUrl: "{% url 'testing:test_finish' %}",
+        csrfToken: "{{ csrf_token }}"
+    };
+
+    // --- State ---
+    let state = {
+        currentQuestionIndex: 0,
+        totalQuestions: 0,
+        timerInterval: null
+    };
+
+    // --- DOM Elements ---
+    const dom = {
+        timer: document.getElementById('timer'),
+        progressBar: document.getElementById('progress-bar'),
+        questionContainer: document.getElementById('question-container'),
+        prevBtn: document.getElementById('prev-btn'),
+        nextBtn: document.getElementById('next-btn'),
+        skipBtn: document.getElementById('skip-btn'),
+        finishBtn: document.getElementById('finish-btn')
+    };
+
+    // --- Functions ---
+    async function loadQuestion(index) {
+        try {
+            const response = await fetch(`${config.getQuestionUrl}?index=${index}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+
+            if (data.status === 'finished') {
+                window.location.href = data.result_url;
+                return;
+            }
+            
+            state.totalQuestions = data.total_questions;
+            updateProgressBar();
+            
+            let optionsHtml = '';
+            data.options.forEach(opt => {
+                const isChecked = data.selected_option === opt[0] ? 'checked' : '';
+                optionsHtml += `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="option" id="opt${opt[0]}" value="${opt[0]}" ${isChecked}>
+                        <label class="form-check-label" for="opt${opt[0]}">${opt[1]}</label>
+                    </div>`;
+            });
+
+            dom.questionContainer.innerHTML = `
+                <p class="fs-5" data-question-id="${data.question_id}">${data.text}</p>
+                <form>${optionsHtml}</form>`;
+            
+            updateNavigation();
+            autoSaveAnswerOnChange();
+
+        } catch (error) {
+            console.error("Failed to load question:", error);
+            dom.questionContainer.innerHTML = `<p class="text-danger">Ошибка загрузки вопроса. Попробуйте обновить страницу.</p>`;
+        }
+    }
+
+    async function saveAnswer(isSkipping = false) {
+        const questionId = dom.questionContainer.querySelector('p[data-question-id]').dataset.questionId;
+        const selectedRadio = dom.questionContainer.querySelector('input[name="option"]:checked');
+        let selectedOption = selectedRadio ? selectedRadio.value : null;
+
+        if (isSkipping) selectedOption = null;
+
+        const formData = new FormData();
+        formData.append('question_id', questionId);
+        if (selectedOption !== null) {
+            formData.append('selected_option', selectedOption);
+        }
+        
+        try {
+            await fetch(config.saveAnswerUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': config.csrfToken },
+                body: formData
+            });
+        } catch (error) {
+            console.error('Failed to save answer:', error);
+        }
+    }
+
+    function updateProgressBar() {
+        const percentage = state.totalQuestions > 0 ? ((state.currentQuestionIndex + 1) / state.totalQuestions) * 100 : 0;
+        dom.progressBar.style.width = `${percentage}%`;
+        dom.progressBar.textContent = `${state.currentQuestionIndex + 1} / ${state.totalQuestions}`;
+    }
+
+    function updateNavigation() {
+        dom.prevBtn.disabled = state.currentQuestionIndex === 0;
+
+        if (state.totalQuestions === 0) { // На случай, если каким-то образом нет вопросов
+             dom.nextBtn.style.display = 'none';
+        } else if (state.currentQuestionIndex === state.totalQuestions - 1) {
+            // Если это последний вопрос (или единственный)
+            dom.nextBtn.style.display = 'none'; // Скрываем кнопку "Далее"
+        } else {
+            // Если это не последний вопрос
+            dom.nextBtn.style.display = 'inline-block'; // Показываем кнопку "Далее"
+            dom.nextBtn.textContent = 'Далее'; // Убедимся, что текст правильный
+        }
+    }
+
+    function autoSaveAnswerOnChange() {
+        dom.questionContainer.querySelectorAll('input[name="option"]').forEach(radio => {
+            radio.addEventListener('change', () => saveAnswer());
+        });
+    }
+
+    // --- Timer ---
+    function startTimer() {
+        state.timerInterval = setInterval(() => {
+            const now = new Date();
+            const timeLeft = Math.round((config.serverEndTime - now) / 1000);
+
+            if (timeLeft <= 0) {
+                clearInterval(state.timerInterval);
+                dom.timer.textContent = "00:00";
+                alert("Время вышло! Тест будет завершен автоматически.");
+                window.location.href = config.finishUrl;
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            dom.timer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    // --- Anti-Cheat ---
+    function setupAntiCheat() {
+        // Disable right-click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Disable F5, Ctrl+R, Ctrl+C, etc.
+        document.addEventListener('keydown', e => {
+            if (e.key === "F5" || (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.key === 'c')) {
+                e.preventDefault();
+            }
+        });
+        
+        // Warn on leaving
+        window.addEventListener('beforeunload', e => {
+            e.preventDefault();
+            e.returnValue = 'Вы уверены, что хотите покинуть страницу? Прогресс может быть утерян.';
+        });
+
+        // Disable back button
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+    }
+
+    // --- Event Listeners ---
+    dom.nextBtn.addEventListener('click', async () => {
+        await saveAnswer();
+        // Этот код будет вызван, только если кнопка "Далее" видима,
+        // а значит, это НЕ последний вопрос.
+        // Поэтому state.currentQuestionIndex всегда будет < state.totalQuestions - 1
+        state.currentQuestionIndex++;
+        loadQuestion(state.currentQuestionIndex);
+    });
+
+    dom.prevBtn.addEventListener('click', () => {
+        if (state.currentQuestionIndex > 0) {
+            state.currentQuestionIndex--;
+            loadQuestion(state.currentQuestionIndex);
+        }
+    });
+
+    dom.skipBtn.addEventListener('click', async () => {
+        await saveAnswer(true); // Save as skipped
+        if (state.currentQuestionIndex < state.totalQuestions - 1) {
+            state.currentQuestionIndex++;
+            loadQuestion(state.currentQuestionIndex);
+        } else {
+             alert("Это последний вопрос. Вы можете завершить тест.");
+        }
+    });
+
+    dom.finishBtn.addEventListener('click', () => {
+        if (confirm("Вы уверены, что хотите досрочно завершить тест?")) {
+            window.location.href = config.finishUrl;
+        }
+    });
+
+    // --- Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+        loadQuestion(state.currentQuestionIndex);
+        startTimer();
+        setupAntiCheat();
+    });
+
+</script>
+{% endblock %}

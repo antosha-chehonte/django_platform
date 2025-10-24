@@ -1,0 +1,31 @@
+{# templates/tests/test_list.html #}
+
+{% extends "apps_testing/app_testing_base.html" %}
+{% block title %}Доступные тесты{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Доступные тесты</h1>
+    <p class="lead">Выберите тест для прохождения.</p>
+</div>
+
+<div class="row mt-4">
+    {% for test in tests %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ test.title }}</h5>
+                <p class="card-text">{{ test.description|truncatewords:20 }}</p>
+                <div class="mt-auto">
+                    <a href="{% url 'testing:test_access' test.id %}" class="btn btn-primary w-100">Пройти тест</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col">
+        <p class="text-center">На данный момент нет доступных тестов.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

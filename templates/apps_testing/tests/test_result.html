@@ -1,0 +1,139 @@
+{# templates/tests/test_result.html #}
+
+{% extends "apps_testing/app_testing_base.html" %}
+{% block title %}Результаты теста{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Результаты теста: {{ session.test.title }}</h2>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">Участник: {{ session.get_full_name }}</h4>
+                <p class="card-text">Дата прохождения: {{ session.end_time|date:"d.m.Y H:i" }}</p>
+
+                <hr>
+
+                <h3 class="text-center mb-4">Итоговая статистика</h3>
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded">
+                            <h5>Правильно</h5>
+                            <p class="fs-3 text-success fw-bold">{{ result.correct_answers }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded">
+                            <h5>Неправильно</h5>
+                            <p class="fs-3 text-danger fw-bold">{{ incorrect_answers_count }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded">
+                            <h5>Пропущено</h5>
+                            <p class="fs-3 text-warning fw-bold">{{ result.skipped_questions }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h5>Итоговый %</h5>
+                            <p class="fs-3 text-primary fw-bold">{{ result.percentage }}%</p>
+                        </div>
+                    </div>
+                </div>
+                {# Проверяем, есть ли вообще ошибки или пропуски, чтобы не выводить пустой раздел #}
+                {% if incorrect_answers or skipped_questions %}
+                    <section class="details-section">
+                        <h2>Подробный разбор</h2>
+
+                        {% if incorrect_answers %}
+                            <h3>Неправильные ответы</h3>
+                            {% for answer in incorrect_answers %}
+                                <div class="question-block">
+                                    <p class="question-text">
+                                        <strong>{{ forloop.counter }}. {{ answer.question.text }}</strong></p>
+
+                                    {# Блок для отображения текста ответа пользователя #}
+                                    <p class="user-answer">
+                                        <strong>Ваш ответ:</strong>
+                                        {% with selected=answer.selected_option q=answer.question %}
+                                            {% if selected == 1 %}{{ q.option_1 }}{% elif selected == 2 %}
+                                                {{ q.option_2 }}{% elif selected == 3 %}{{ q.option_3 }}{% elif selected == 4 %}
+                                                {{ q.option_4 }}{% else %}Ответ не был дан{% endif %}
+                                        {% endwith %}
+                                    </p>
+
+                                    {# Блок для отображения текста правильного ответа #}
+                                    <p class="correct-answer">
+                                        <strong>Правильный ответ:</strong>
+                                        {% with correct=answer.question.correct_option q=answer.question %}
+                                            {% if correct == 1 %}{{ q.option_1 }}{% elif correct == 2 %}
+                                                {{ q.option_2 }}{% elif correct == 3 %}{{ q.option_3 }}{% elif correct == 4 %}
+                                                {{ q.option_4 }}{% endif %}
+                                        {% endwith %}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                      </section>
+                {% endif %}
+                {#                {% if incorrect_answers or skipped_questions %}#}
+                {#                    <hr class="my-4">#}
+                {#                    <h3 class="text-center mb-4">Разбор ошибок</h3>#}
+                {##}
+                {#                    {% if incorrect_answers %}#}
+                {#                        <h4>Неправильные ответы:</h4>#}
+                {#                        <ul class="list-group mb-4">#}
+                {#                            {% for answer in incorrect_answers %}#}
+                {#                                <li class="list-group-item">#}
+                {#                                    <p class="fw-bold">{{ forloop.counter }}. {{ answer.question.text }}</p>#}
+                {#                                    {% with q=answer.question %}#}
+                {#                                        <p class="mb-1 text-danger">#}
+                {#                                            <span class="badge bg-danger">Ваш ответ</span>#}
+                {#                                            {% if answer.selected_option == 1 %}#}
+                {#                                                {{ q.option_1 }}{% elif answer.selected_option == 2 %}#}
+                {#                                                {{ q.option_2 }}{% elif answer.selected_option == 3 %}#}
+                {#                                                {{ q.option_3 }}{% else %}{{ q.option_4 }}{% endif %}#}
+                {#                                        </p>#}
+                {#                                        <p class="mb-0 text-success">#}
+                {#                                            <span class="badge bg-success">Верный ответ</span>#}
+                {#                                            {% if q.correct_option == 1 %}#}
+                {#                                                {{ q.option_1 }}{% elif q.correct_option == 2 %}#}
+                {#                                                {{ q.option_2 }}{% elif q.correct_option == 3 %}#}
+                {#                                                {{ q.option_3 }}{% else %}{{ q.option_4 }}{% endif %}#}
+                {#                                        </p>#}
+                {#                                    {% endwith %}#}
+                {#                                </li>#}
+                {#                            {% endfor %}#}
+                {#                        </ul>#}
+                {#                    {% endif %}#}
+                {##}
+                {#                    {% if skipped_questions %}#}
+                {#                        <h4>Пропущенные вопросы:</h4>#}
+                {#                        <ul class="list-group">#}
+                {#                            {% for question in skipped_questions %}#}
+                {#                                <li class="list-group-item">#}
+                {#                                    <p class="fw-bold">{{ forloop.counter }}. {{ question.text }}</p>#}
+                {#                                    <p class="mb-0 text-success">#}
+                {#                                        <span class="badge bg-success">Верный ответ</span>#}
+                {#                                        {% if question.correct_option == 1 %}#}
+                {#                                            {{ question.option_1 }}{% elif question.correct_option == 2 %}#}
+                {#                                            {{ question.option_2 }}{% elif question.correct_option == 3 %}#}
+                {#                                            {{ question.option_3 }}{% else %}{{ question.option_4 }}{% endif %}#}
+                {#                                    </p>#}
+                {#                                </li>#}
+                {#                            {% endfor %}#}
+                {#                        </ul>#}
+                {#                    {% endif %}#}
+                {##}
+                {#                {% endif %}#}
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'testing:test_list' %}" class="btn btn-secondary">Вернуться к списку тестов</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

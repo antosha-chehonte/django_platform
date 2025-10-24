@@ -1,0 +1,134 @@
+{# templates/pdf/test_result_report.html #}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет о результатах теста: {{ result.session.test.title }}</title>
+    <style>
+        /*
+        Этот блок style можно оставить пустым, т.к. стили будут
+        подключаться из внешнего CSS-файла в view.
+        Однако, его наличие может помочь некоторым редакторам кода.
+        */
+    </style>
+</head>
+<body>
+
+<header class="report-header">
+    <h1>Отчет о результатах теста</h1>
+    <h2>«{{ result.session.test.title }}»</h2>
+</header>
+
+<main>
+    <section class="info-section">
+        <h3>Общая информация</h3>
+        <table class="info-table">
+            <tbody>
+            <tr>
+                <td>ФИО участника:</td>
+                <td>{{ result.session.get_full_name }}</td>
+            </tr>
+            <tr>
+                <td>Дата завершения:</td>
+                <td>{{ result.session.end_time|date:"d F Y г. в H:i" }}</td>
+            </tr>
+            <tr>
+                <td>Время прохождения:</td>
+                <td>{{ result.session.end_time|timesince:result.session.start_time }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="stats-section">
+        <h3>Итоговая статистика</h3>
+        <table class="stats-table">
+            <tbody>
+            <tr class="total-percentage">
+                <td>Итоговый результат:</td>
+                <td>{{ result.percentage }}%</td>
+            </tr>
+            <tr>
+                <td>Всего вопросов в тесте:</td>
+                <td>{{ result.total_questions }}</td>
+            </tr>
+            <tr>
+                <td>Правильных ответов:</td>
+                <td>{{ result.correct_answers }} ({{ result.percentage }}%)</td>
+            </tr>
+            <tr>
+                <td>Неправильных ответов:</td>
+                <td>{{ incorrect_answers_count }}</td>
+            </tr>
+            <tr>
+                <td>Пропущено вопросов:</td>
+                <td>{{ result.skipped_questions }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    {# Проверяем, есть ли вообще ошибки или пропуски, чтобы не выводить пустой раздел #}
+    {% if incorrect_answers or skipped_questions %}
+        <section class="details-section">
+            <h2>Подробный разбор</h2>
+
+            {% if incorrect_answers %}
+                <h3>Неправильные ответы</h3>
+                {% for answer in incorrect_answers %}
+                    <div class="question-block">
+                        <p class="question-text"><strong>{{ forloop.counter }}. {{ answer.question.text }}</strong></p>
+
+                        {# Блок для отображения текста ответа пользователя #}
+                        <p class="user-answer">
+                            <strong>Ваш ответ:</strong>
+                            {% with selected=answer.selected_option q=answer.question %}
+                                {% if selected == 1 %}{{ q.option_1 }}{% elif selected == 2 %}
+                                    {{ q.option_2 }}{% elif selected == 3 %}{{ q.option_3 }}{% elif selected == 4 %}
+                                    {{ q.option_4 }}{% else %}Ответ не был дан{% endif %}
+                            {% endwith %}
+                        </p>
+
+                        {# Блок для отображения текста правильного ответа #}
+                        <p class="correct-answer">
+                            <strong>Правильный ответ:</strong>
+                            {% with correct=answer.question.correct_option q=answer.question %}
+                                {% if correct == 1 %}{{ q.option_1 }}{% elif correct == 2 %}
+                                    {{ q.option_2 }}{% elif correct == 3 %}{{ q.option_3 }}{% elif correct == 4 %}
+                                    {{ q.option_4 }}{% endif %}
+                            {% endwith %}
+                        </p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {# Эта часть будет работать, если вы передадите 'skipped_questions' в контекст. Наша функция test_result их вычисляет #}
+{#            {% if skipped_questions %}#}
+{#                <h3 class="skipped-title">Пропущенные вопросы</h3>#}
+{#                {% for question in skipped_questions %}#}
+{#                    <div class="question-block">#}
+{#                        <p class="question-text"><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>#}
+{#                        <p class="correct-answer">#}
+{#                            <strong>Правильный ответ:</strong>#}
+{#                            {% with correct=question.correct_option %}#}
+{#                                {% if correct == 1 %}{{ question.option_1 }}{% elif correct == 2 %}#}
+{#                                    {{ question.option_2 }}{% elif correct == 3 %}#}
+{#                                    {{ question.option_3 }}{% elif correct == 4 %}{{ question.option_4 }}{% endif %}#}
+{#                            {% endwith %}#}
+{#                        </p>#}
+{#                    </div>#}
+{#                {% endfor %}#}
+{#            {% endif %}#}
+
+        </section>
+    {% endif %}
+
+</main>
+
+<footer>
+    Отчет сгенерирован автоматически системой тестирования. Дата генерации: {% now "d.m.Y H:i" %}
+</footer>
+
+</body>
+</html>

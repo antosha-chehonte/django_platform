@@ -1,0 +1,17 @@
+{# templates/moderator/confirm_delete.html#}
+{% extends "apps_testing/moderator/base.html" %}
+
+{% block moderator_content %}
+<h1>Подтверждение удаления</h1>
+
+<div class="alert alert-danger">
+    <p>Вы уверены, что хотите безвозвратно удалить следующий объект?</p>
+    <h4 class="alert-heading">"{{ object }}"</h4>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Да, удалить</button>
+    <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock moderator_content %}

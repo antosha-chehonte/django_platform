@@ -1,0 +1,36 @@
+{# templates/moderator/dashboard.html #}
+
+{% extends "apps_testing/moderator/base.html" %}
+
+{% block moderator_content %}
+    <h1>Главная панель</h1>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Тесты</h5>
+                    <p class="card-text fs-1">{{ tests_count }}</p>
+                    <a href="{% url 'moderator:test_list' %}" class="btn btn-primary">Управлять</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Наборы вопросов</h5>
+                    <p class="card-text fs-1">{{ qsets_count }}</p>
+                    <a href="{% url 'moderator:qset_list' %}" class="btn btn-primary">Управлять</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Результаты</h5>
+                    <p class="card-text fs-1">{{ results_count }}</p>
+                    <a href="{% url 'moderator:result_list' %}" class="btn btn-primary">Смотреть</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock moderator_content %}

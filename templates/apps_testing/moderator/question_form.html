@@ -1,0 +1,89 @@
+{# templates/moderator/question_form.html #}
+{% extends "apps_testing/moderator/base.html" %}
+
+{% block moderator_content %}
+    <h5 class="text-muted mb-4">
+        Набор вопросов: <a href="{% url 'moderator:question_list' qset.pk %}">{{ qset.title }}</a>
+    </h5>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            {% if form.instance.pk %}
+                Редактирование вопроса
+            {% else %}
+                Добавление вопроса в набор "{{ qset.title }}"
+            {% endif %}
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="
+                    
+                    {% if form.instance.pk %}{% url 'moderator:question_list' pk=form.instance.question_set.pk %}{% else %}{% url 'moderator:question_list' pk=view.kwargs.qset_pk %}{% endif %}"
+               class="btn btn-sm btn-outline-secondary">
+                ← Назад к списку вопросов
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 col-lg-12">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Вывод общих ошибок формы -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <!-- Поле для текста вопроса -->
+                <div class="mb-3">
+                    <label for="{{ form.text.id_for_label }}" class="form-label fw-bold">{{ form.text.label }}</label>
+                    {{ form.text }}
+                    {% if form.text.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.text.errors.as_text }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Варианты ответов -->
+                <h5 class="mb-3">Варианты ответов</h5>
+
+                {% for field in form %}
+                    {% if field.name in "option_1,option_2,option_3,option_4" %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ field.errors.as_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <hr class="my-4">
+
+                <!-- Поле для выбора правильного ответа -->
+                <div class="mb-4">
+                    <label for="{{ form.correct_option.id_for_label }}"
+                           class="form-label fw-bold">{{ form.correct_option.label }}</label>
+                    {{ form.correct_option }}
+                    {% if form.correct_option.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.correct_option.errors.as_text }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Выберите номер варианта, который является правильным.</div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-lg">Сохранить вопрос</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock moderator_content %}

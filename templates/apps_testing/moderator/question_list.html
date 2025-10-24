@@ -1,0 +1,54 @@
+{# templates/moderator/question_list.html #}
+
+{% extends "apps_testing/moderator/base.html" %}
+
+{% block moderator_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'moderator:qset_list' %}" class="btn btn-sm btn-outline-secondary mb-2">← Назад к наборам</a>
+        <h1 class="h3">Вопросы для набора: "{{ qset.title }}"</h1>
+    </div>
+    <a href="{% url 'moderator:question_create' qset.pk %}" class="btn btn-primary">
+        Добавить новый вопрос
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if questions %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Текст вопроса</th>
+                        <th>Правильный ответ</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for question in questions %}
+                    <tr>
+                        <td>{{ question.text }}</td>
+                        <td>
+                            {% if question.correct_option == 1 %}{{ question.option_1 }}{% elif question.correct_option == 2 %}{{ question.option_2 }}{% elif question.correct_option == 3 %}{{ question.option_3 }}{% elif question.correct_option == 4 %}{{ question.option_4 }}{% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-grid gap-2">
+                            <a href="{% url 'moderator:question_update' question.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                            <a href="{% url 'moderator:question_delete' question.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center p-4">
+            <p class="lead">В этом наборе еще нет вопросов.</p>
+            <p>Вы можете добавить первый, нажав на кнопку выше.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock moderator_content %}
