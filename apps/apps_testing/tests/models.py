@@ -33,8 +33,8 @@ class Question(models.Model):
 
     class Meta:
         app_label = 'tests'
-        verbose_name = "Набор вопросов"
-        verbose_name_plural = "Наборы вопросов"
+        verbose_name = "Вопрос"
+        verbose_name_plural = "Вопросы"
 
 # 3. Модель Test (Тест)
 class Test(models.Model):
@@ -54,7 +54,7 @@ class Test(models.Model):
     class Meta:
         app_label = 'tests'
         verbose_name = "Вопрос"
-        verbose_name_plural = "Вопросы"
+        verbose_name_plural = "Вопросы" 
 
 # 4. Модель TestSession (Сессия тестирования)
 class TestSession(models.Model):

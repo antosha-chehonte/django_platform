@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Подтверждение удаления</h4>
+            </div>
+            <div class="card-body">
+                <p>Вы уверены, что хотите удалить подразделение:</p>
+                <div class="alert alert-warning">
+                    <strong>{{ object.code }}</strong> - {{ object.name }}
+                </div>
+                {% if object.children.all %}
+                <div class="alert alert-danger">
+                    <strong>Внимание!</strong> У этого подразделения есть дочерние подразделения ({{ object.children.count }} шт.)
+                </div>
+                {% endif %}
+                <p class="text-muted">Это действие нельзя отменить.</p>
+            </div>
+            <div class="card-footer">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'reference:departments_detail' object.pk %}" class="btn btn-secondary">
+                            Отмена
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h2 class="mb-4">Справочники нормативно-справочной информации</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Подразделения</h5>
+                <p class="card-text">Справочник подразделений организации с иерархической структурой.</p>
+                <p class="text-muted">
+                    <strong>Записей:</strong> {{ departments_count }}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'reference:departments_list' %}" class="btn btn-primary">
+                    <i class="bi bi-building"></i> Перейти к подразделениям
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Должности</h5>
+                <p class="card-text">Справочник должностей с категоризацией и описанием.</p>
+                <p class="text-muted">
+                    <strong>Записей:</strong> {{ postnames_count }}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'reference:postname_list' %}" class="btn btn-primary">
+                    <i class="bi bi-briefcase"></i> Перейти к должностям
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

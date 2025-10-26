@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="mb-0">Информация о должности</h3>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Код должности:</dt>
+            <dd class="col-sm-9"><strong>{{ postname.code }}</strong></dd>
+            
+            <dt class="col-sm-3">Название:</dt>
+            <dd class="col-sm-9">{{ postname.name }}</dd>
+            
+            {% if postname.category %}
+            <dt class="col-sm-3">Категория:</dt>
+            <dd class="col-sm-9"><span class="badge bg-info">{{ postname.category }}</span></dd>
+            {% endif %}
+            
+            <dt class="col-sm-3">Описание:</dt>
+            <dd class="col-sm-9">
+                {% if postname.description %}
+                    {{ postname.description }}
+                {% else %}
+                    <span class="text-muted">Описание отсутствует</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Статус:</dt>
+            <dd class="col-sm-9">
+                {% if postname.is_active %}
+                    <span class="badge bg-success">Активна</span>
+                {% else %}
+                    <span class="badge bg-secondary">Неактивна</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Дата создания:</dt>
+            <dd class="col-sm-9">{{ postname.created_at|date:"d.m.Y H:i" }}</dd>
+            
+            <dt class="col-sm-3">Последнее обновление:</dt>
+            <dd class="col-sm-9">{{ postname.updated_at|date:"d.m.Y H:i" }}</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        {% if user.is_authenticated %}
+        <a href="{% url 'reference:postname_update' postname.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        <a href="{% url 'reference:postname_delete' postname.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+        <a href="{% url 'reference:postname_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+{% endblock %}
+

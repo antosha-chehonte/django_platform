@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="mb-0">Информация о подразделении</h3>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Код подразделения:</dt>
+            <dd class="col-sm-9"><strong>{{ department.code }}</strong></dd>
+            
+            <dt class="col-sm-3">Название:</dt>
+            <dd class="col-sm-9">{{ department.name }}</dd>
+            
+            {% if department.parent %}
+            <dt class="col-sm-3">Родительское подразделение:</dt>
+            <dd class="col-sm-9">
+                <a href="{% url 'reference:departments_detail' department.parent.pk %}">
+                    {{ department.parent.name }} ({{ department.parent.code }})
+                </a>
+            </dd>
+            {% endif %}
+            
+            <dt class="col-sm-3">Описание:</dt>
+            <dd class="col-sm-9">
+                {% if department.description %}
+                    {{ department.description }}
+                {% else %}
+                    <span class="text-muted">Описание отсутствует</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Статус:</dt>
+            <dd class="col-sm-9">
+                {% if department.is_active %}
+                    <span class="badge bg-success">Активно</span>
+                {% else %}
+                    <span class="badge bg-secondary">Неактивно</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Дата создания:</dt>
+            <dd class="col-sm-9">{{ department.created_at|date:"d.m.Y H:i" }}</dd>
+            
+            <dt class="col-sm-3">Последнее обновление:</dt>
+            <dd class="col-sm-9">{{ department.updated_at|date:"d.m.Y H:i" }}</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        {% if user.is_authenticated %}
+        <a href="{% url 'reference:departments_update' department.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        <a href="{% url 'reference:departments_delete' department.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+        <a href="{% url 'reference:departments_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+
+<!-- Дочерние подразделения -->
+{% if department.children.all %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Дочерние подразделения</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            {% for child in department.children.all %}
+            <li class="list-group-item">
+                <a href="{% url 'reference:departments_detail' child.pk %}">
+                    <strong>{{ child.code }}</strong> - {{ child.name }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
