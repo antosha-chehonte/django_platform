@@ -8,7 +8,7 @@ from .models import Departments, Postname
 from .forms import DepartmentForm, PostnameForm
 
 
-class DepartmentListView(ListView):
+class DepartmentListView(LoginRequiredMixin, ListView):
     """Список подразделений"""
     model = Departments
     template_name = 'reference/departments_list.html'
@@ -32,7 +32,7 @@ class DepartmentListView(ListView):
         return context
 
 
-class DepartmentDetailView(DetailView):
+class DepartmentDetailView(LoginRequiredMixin, DetailView):
     """Детальная информация о подразделении"""
     model = Departments
     template_name = 'reference/departments_detail.html'
@@ -45,6 +45,7 @@ class DepartmentCreateView(LoginRequiredMixin, CreateView):
     form_class = DepartmentForm
     template_name = 'reference/departments_form.html'
     success_url = reverse_lazy('reference:departments_list')
+    login_url = '/testing/moderator/login/'
     
     def form_valid(self, form):
         messages.success(self.request, 'Подразделение успешно создано.')
@@ -57,6 +58,7 @@ class DepartmentUpdateView(LoginRequiredMixin, UpdateView):
     form_class = DepartmentForm
     template_name = 'reference/departments_form.html'
     success_url = reverse_lazy('reference:departments_list')
+    login_url = '/testing/moderator/login/'
     
     def form_valid(self, form):
         messages.success(self.request, 'Подразделение успешно обновлено.')
@@ -68,13 +70,14 @@ class DepartmentDeleteView(LoginRequiredMixin, DeleteView):
     model = Departments
     template_name = 'reference/departments_confirm_delete.html'
     success_url = reverse_lazy('reference:departments_list')
+    login_url = '/testing/moderator/login/'
     
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Подразделение успешно удалено.')
         return super().delete(request, *args, **kwargs)
 
 
-class PostnameListView(ListView):
+class PostnameListView(LoginRequiredMixin, ListView):
     """Список должностей"""
     model = Postname
     template_name = 'reference/postname_list.html'
@@ -99,7 +102,7 @@ class PostnameListView(ListView):
         return context
 
 
-class PostnameDetailView(DetailView):
+class PostnameDetailView(LoginRequiredMixin, DetailView):
     """Детальная информация о должности"""
     model = Postname
     template_name = 'reference/postname_detail.html'
@@ -112,6 +115,7 @@ class PostnameCreateView(LoginRequiredMixin, CreateView):
     form_class = PostnameForm
     template_name = 'reference/postname_form.html'
     success_url = reverse_lazy('reference:postname_list')
+    login_url = '/testing/moderator/login/'
     
     def form_valid(self, form):
         messages.success(self.request, 'Должность успешно создана.')
@@ -124,6 +128,7 @@ class PostnameUpdateView(LoginRequiredMixin, UpdateView):
     form_class = PostnameForm
     template_name = 'reference/postname_form.html'
     success_url = reverse_lazy('reference:postname_list')
+    login_url = '/testing/moderator/login/'
     
     def form_valid(self, form):
         messages.success(self.request, 'Должность успешно обновлена.')
@@ -135,12 +140,17 @@ class PostnameDeleteView(LoginRequiredMixin, DeleteView):
     model = Postname
     template_name = 'reference/postname_confirm_delete.html'
     success_url = reverse_lazy('reference:postname_list')
+    login_url = '/testing/moderator/login/'
     
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Должность успешно удалена.')
         return super().delete(request, *args, **kwargs)
 
 
+from django.contrib.auth.decorators import login_required
+
+
+@login_required(login_url='/testing/moderator/login/')
 def reference_home(request):
     """Главная страница справочников"""
     departments_count = Departments.objects.filter(is_active=True).count()

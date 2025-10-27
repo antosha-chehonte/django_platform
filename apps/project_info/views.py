@@ -25,6 +25,11 @@ def home_page(request):
             'description': 'Приложение для управления тестами и проверки отчетов о тестировании.',
             'url': 'moderator:dashboard'
         },
+        {
+            'name': 'Справочники',
+            'description': 'Приложение для управления справочниками.',
+            'url': 'reference:reference_home'
+        },
     ]
 
     context = {
