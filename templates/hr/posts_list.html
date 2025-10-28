@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center">
+  <h2>Штатное расписание</h2>
+  <a class="btn btn-success" href="{% url 'hr:post_create' %}">Добавить позицию</a>
+  </div>
+
+<div class="table-responsive mt-3">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Подразделение</th>
+        <th>Должность</th>
+        <th>Статус</th>
+        <th>Сотрудник</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in posts %}
+      <tr>
+        <td>{{ p.department }}</td>
+        <td>{{ p.postname }}</td>
+        <td>
+          {% if p.status == 'occupied' %}
+            <span class="badge bg-success">Занята</span>
+          {% else %}
+            <span class="badge bg-danger">Вакантна</span>
+          {% endif %}
+        </td>
+        <td>{% if p.employee %}{{ p.employee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'hr:post_detail' p.pk %}">Открыть</a>
+          <a class="btn btn-sm btn-outline-warning" href="{% url 'hr:post_update' p.pk %}">Изменить</a>
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'hr:post_delete' p.pk %}">Удалить</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-muted">Позиции не найдены</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+

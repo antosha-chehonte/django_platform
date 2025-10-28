@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <h3>{% if object %}Редактирование{% else %}Создание{% endif %} штатной позиции</h3>
+
+    <form method="post" class="mt-3">
+      {% csrf_token %}
+      
+      <div class="mb-3">
+        <label for="{{ form.department.id_for_label }}" class="form-label">{{ form.department.label }}</label>
+        {{ form.department }}
+        {% if form.department.errors %}
+          <div class="text-danger">{{ form.department.errors }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="mb-3">
+        <label for="{{ form.postname.id_for_label }}" class="form-label">{{ form.postname.label }}</label>
+        {{ form.postname }}
+        {% if form.postname.errors %}
+          <div class="text-danger">{{ form.postname.errors }}</div>
+        {% endif %}
+      </div>
+      
+      <div class="mb-3 form-check">
+        {{ form.is_active }}
+        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+          {{ form.is_active.label }}
+        </label>
+      </div>
+      
+      <div class="mt-3">
+        <a href="{% url 'hr:posts' %}" class="btn btn-secondary">Отмена</a>
+        <button type="submit" class="btn btn-success">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+

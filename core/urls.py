@@ -10,4 +10,5 @@ urlpatterns = [
     path('testing/', include('apps.apps_testing.tests.urls', namespace='testing')),
     path('testing/moderator/', include(('apps.apps_testing.moderator.urls', 'moderator'), namespace='moderator')),
     path('reference/', include('apps.reference.urls', namespace='reference')),
+    path('hr/', include(('apps.hr.urls', 'hr'), namespace='hr')),
 ]

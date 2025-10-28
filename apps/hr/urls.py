@@ -1,0 +1,30 @@
+from django.urls import path
+from . import views
+from .views import (
+    PostsListView, PostsDetailView,
+    HireNewEmployeeView, AssignExistingEmployeeView, MoveEmployeeView, FreePositionView,
+    EmployeesListView, EmployeeDetailView, EmployeeCreateView, EmployeeUpdateView, EmployeeDeleteView,
+    PostCreateView, PostUpdateView, PostDeleteView
+)
+
+app_name = 'hr'
+
+urlpatterns = [
+    path('', views.hr_home, name='home'),
+    path('posts/', PostsListView.as_view(), name='posts'),
+    path('posts/create/', PostCreateView.as_view(), name='post_create'),
+    path('posts/<int:pk>/', PostsDetailView.as_view(), name='post_detail'),
+    path('posts/<int:pk>/update/', PostUpdateView.as_view(), name='post_update'),
+    path('posts/<int:pk>/delete/', PostDeleteView.as_view(), name='post_delete'),
+    path('posts/<int:pk>/hire/', HireNewEmployeeView.as_view(), name='post_hire_new'),
+    path('posts/<int:pk>/assign/', AssignExistingEmployeeView.as_view(), name='post_assign_existing'),
+    path('posts/<int:pk>/move/', MoveEmployeeView.as_view(), name='post_move'),
+    path('posts/<int:pk>/free/', FreePositionView.as_view(), name='post_free'),
+    path('employees/', EmployeesListView.as_view(), name='employees'),
+    path('employees/create/', EmployeeCreateView.as_view(), name='employee_create'),
+    path('employees/<int:pk>/', EmployeeDetailView.as_view(), name='employee_detail'),
+    path('employees/<int:pk>/update/', EmployeeUpdateView.as_view(), name='employee_update'),
+    path('employees/<int:pk>/delete/', EmployeeDeleteView.as_view(), name='employee_delete'),
+]
+
+

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Управление персоналом</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Сотрудники</h5>
+            </div>
+            <div class="card-body">
+                <p>Управление базой данных сотрудников организации</p>
+                <ul class="list-unstyled">
+                    <li>✓ Просмотр списка всех сотрудников</li>
+                    <li>✓ Добавление новых сотрудников</li>
+                    <li>✓ Редактирование информации о сотрудниках</li>
+                    <li>✓ Удаление записей</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'hr:employees' %}" class="btn btn-primary">
+                    Перейти к сотрудникам
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Штатное расписание</h5>
+            </div>
+            <div class="card-body">
+                <p>Управление штатным расписанием организации</p>
+                <ul class="list-unstyled">
+                    <li>✓ Просмотр всех позиций</li>
+                    <li>✓ Принятие новых сотрудников</li>
+                    <li>✓ Назначение существующих сотрудников</li>
+                    <li>✓ Перемещение между должностями</li>
+                    <li>✓ Освобождение должностей</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'hr:posts' %}" class="btn btn-success">
+                    Перейти к штатному расписанию
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Быстрые ссылки</h5>
+            </div>
+            <div class="card-body">
+                <div class="btn-group-vertical" role="group">
+                    <a href="{% url 'hr:employees' %}" class="btn btn-outline-primary text-start">
+                        <strong>Список сотрудников</strong><br>
+                        <small class="text-muted">Просмотр и управление базой сотрудников</small>
+                    </a>
+                    <a href="{% url 'hr:employee_create' %}" class="btn btn-outline-success text-start">
+                        <strong>Добавить нового сотрудника</strong><br>
+                        <small class="text-muted">Регистрация нового сотрудника в системе</small>
+                    </a>
+                    <a href="{% url 'hr:posts' %}" class="btn btn-outline-info text-start">
+                        <strong>Штатное расписание</strong><br>
+                        <small class="text-muted">Просмотр всех должностей и их статусов</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

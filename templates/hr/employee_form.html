@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>{% if object %}Редактирование{% else %}Создание{% endif %} сотрудника</h3>
+
+<form method="post" class="mt-3">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="mt-3">
+        <button type="submit" class="btn btn-success">Сохранить</button>
+        <a href="{% url 'hr:employees' %}" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+{% endblock %}
+

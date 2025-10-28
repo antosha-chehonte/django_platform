@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Позиция: {{ post.postname }} ({{ post.department }})</h2>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <dl class="row">
+      <dt class="col-sm-3">Статус</dt>
+      <dd class="col-sm-9">
+        {% if post.status == 'occupied' %}
+          <span class="badge bg-success">Занята</span>
+        {% else %}
+          <span class="badge bg-danger">Вакантна</span>
+        {% endif %}
+      </dd>
+      <dt class="col-sm-3">Сотрудник</dt>
+      <dd class="col-sm-9">{% if post.employee %}{{ post.employee }}{% else %}<span class="text-muted">—</span>{% endif %}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="mt-3">
+  <a class="btn btn-secondary" href="{% url 'hr:posts' %}">Назад</a>
+  <a class="btn btn-outline-warning" href="{% url 'hr:post_update' post.pk %}">Изменить позицию</a>
+  <a class="btn btn-outline-danger" href="{% url 'hr:post_delete' post.pk %}">Удалить позицию</a>
+  {% if post.status == 'vacant' %}
+    <a class="btn btn-success" href="{% url 'hr:post_hire_new' post.pk %}">Принять нового</a>
+    <a class="btn btn-primary" href="{% url 'hr:post_assign_existing' post.pk %}">Назначить из базы</a>
+  {% else %}
+    <a class="btn btn-warning" href="{% url 'hr:post_move' post.pk %}">Переместить</a>
+    <form method="post" action="{% url 'hr:post_free' post.pk %}" style="display:inline" onsubmit="return confirm('Освободить должность?');">
+      {% csrf_token %}
+      <input type="hidden" name="end_date" value="{{ today|default:None }}">
+      <button type="submit" class="btn btn-danger">Освободить должность</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+

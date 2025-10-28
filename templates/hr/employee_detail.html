@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Информация о сотруднике</h2>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Фамилия</dt>
+            <dd class="col-sm-9">{{ employee.last_name }}</dd>
+            
+            <dt class="col-sm-3">Имя</dt>
+            <dd class="col-sm-9">{{ employee.first_name }}</dd>
+            
+            <dt class="col-sm-3">Отчество</dt>
+            <dd class="col-sm-9">{{ employee.middle_name|default:"—" }}</dd>
+            
+            <dt class="col-sm-3">Дата рождения</dt>
+            <dd class="col-sm-9">{{ employee.birth_date|date:"d.m.Y" }}</dd>
+            
+            <dt class="col-sm-3">Пол</dt>
+            <dd class="col-sm-9">{{ employee.get_gender_display }}</dd>
+            
+            <dt class="col-sm-3">Телефон</dt>
+            <dd class="col-sm-9">{{ employee.phone|default:"—" }}</dd>
+            
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">{{ employee.email|default:"—" }}</dd>
+            
+            <dt class="col-sm-3">Статус</dt>
+            <dd class="col-sm-9">
+                {% if employee.is_active %}
+                    <span class="badge bg-success">Активен</span>
+                {% else %}
+                    <span class="badge bg-secondary">Неактивен</span>
+                {% endif %}
+            </dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a href="{% url 'hr:employee_update' employee.pk %}" class="btn btn-warning">Изменить</a>
+        <a href="{% url 'hr:employee_delete' employee.pk %}" class="btn btn-danger">Удалить</a>
+        <a href="{% url 'hr:employees' %}" class="btn btn-secondary">Назад</a>
+    </div>
+</div>
+{% endblock %}
+

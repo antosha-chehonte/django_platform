@@ -30,6 +30,11 @@ def home_page(request):
             'description': 'Приложение для управления справочниками.',
             'url': 'reference:reference_home'
         },
+        {
+            'name': 'Управление сотрудниками',
+            'description': 'Приложение для управления сведениями о сотрудниках.',
+            'url': 'hr:home'
+        },
     ]
 
     context = {

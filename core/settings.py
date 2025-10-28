@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'apps.apps_testing.tests',
     'apps.apps_testing.moderator',
     'apps.reference',
+    'apps.hr',
 ]
 
 MIDDLEWARE = [

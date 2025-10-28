@@ -1,5 +1,9 @@
 from django.contrib import admin
+from django.core.exceptions import ValidationError
+from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
 from .models import Departments, Postname
+from apps.hr.models import Posts
 
 
 @admin.register(Departments)
@@ -24,6 +28,18 @@ class DepartmentsAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+    
+    def has_delete_permission(self, request, obj=None):
+        if obj and Posts.objects.filter(department=obj).exists():
+            return False
+        return super().has_delete_permission(request, obj)
+    
+    def save_model(self, request, obj, form, change):
+        if change and not form.cleaned_data.get('is_active', obj.is_active):
+            if Posts.objects.filter(department=obj).exists():
+                messages.error(request, _('Нельзя деактивировать подразделение: существуют связанные позиции.'))
+                return
+        super().save_model(request, obj, form, change)
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -55,3 +71,15 @@ class PostnameAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+    
+    def has_delete_permission(self, request, obj=None):
+        if obj and Posts.objects.filter(postname=obj).exists():
+            return False
+        return super().has_delete_permission(request, obj)
+    
+    def save_model(self, request, obj, form, change):
+        if change and not form.cleaned_data.get('is_active', obj.is_active):
+            if Posts.objects.filter(postname=obj).exists():
+                messages.error(request, _('Нельзя деактивировать должность: существуют связанные позиции.'))
+                return
+        super().save_model(request, obj, form, change)
