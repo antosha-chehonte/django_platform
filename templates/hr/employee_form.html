@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "hr/base.html" %}
 
-{% block content %}
+{% block hr_content %}
 <h3>{% if object %}Редактирование{% else %}Создание{% endif %} сотрудника</h3>
 
 <form method="post" class="mt-3">
@@ -11,5 +11,5 @@
         <a href="{% url 'hr:employees' %}" class="btn btn-secondary">Отмена</a>
     </div>
 </form>
-{% endblock %}
+{% endblock hr_content %}
 

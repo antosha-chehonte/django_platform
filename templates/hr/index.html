@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "hr/base.html" %}
 
-{% block content %}
+{% block hr_content %}
 <div class="row">
     <div class="col-12">
         <h2 class="mb-4">Управление персоналом</h2>
@@ -74,10 +74,14 @@
                         <strong>Штатное расписание</strong><br>
                         <small class="text-muted">Просмотр всех должностей и их статусов</small>
                     </a>
+                    <a href="{% url 'hr:history' %}" class="btn btn-outline-secondary text-start">
+                        <strong>История перемещений</strong><br>
+                        <small class="text-muted">Отчеты о назначениях, переводах, увольнениях</small>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock hr_content %}
 

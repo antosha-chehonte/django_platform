@@ -209,6 +209,13 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
         return super().post(request, *args, **kwargs)
 
 
+class PositionHistoryListView(LoginRequiredMixin, ListView):
+    model = PositionHistory
+    template_name = 'hr/history_list.html'
+    context_object_name = 'history'
+    paginate_by = 25
+    ordering = ['-start_date', '-created_at']
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Posts
     form_class = PostsForm

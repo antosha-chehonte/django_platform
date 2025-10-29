@@ -4,7 +4,8 @@ from .views import (
     PostsListView, PostsDetailView,
     HireNewEmployeeView, AssignExistingEmployeeView, MoveEmployeeView, FreePositionView,
     EmployeesListView, EmployeeDetailView, EmployeeCreateView, EmployeeUpdateView, EmployeeDeleteView,
-    PostCreateView, PostUpdateView, PostDeleteView
+    PostCreateView, PostUpdateView, PostDeleteView,
+    PositionHistoryListView
 )
 
 app_name = 'hr'
@@ -25,6 +26,7 @@ urlpatterns = [
     path('employees/<int:pk>/', EmployeeDetailView.as_view(), name='employee_detail'),
     path('employees/<int:pk>/update/', EmployeeUpdateView.as_view(), name='employee_update'),
     path('employees/<int:pk>/delete/', EmployeeDeleteView.as_view(), name='employee_delete'),
+    path('history/', PositionHistoryListView.as_view(), name='history'),
 ]
 
 

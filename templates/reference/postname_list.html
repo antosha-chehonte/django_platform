@@ -36,7 +36,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Код</th>
+                        <th>Код сорт.</th>
                         <th>Название</th>
                         <th>Категория</th>
                         <th>Описание</th>
@@ -46,7 +46,7 @@
                 <tbody>
                     {% for postname in postnames %}
                     <tr>
-                        <td><strong>{{ postname.code }}</strong></td>
+                        <td><strong>{{ postname.sorting }}</strong></td>
                         <td>{{ postname.name }}</td>
                         <td>
                             {% if postname.category %}

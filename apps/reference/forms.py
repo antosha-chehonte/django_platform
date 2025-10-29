@@ -7,18 +7,21 @@ class DepartmentForm(forms.ModelForm):
     
     class Meta:
         model = Departments
-        fields = ['name', 'code', 'description', 'parent', 'is_active']
+        fields = ['name', 'code', 'sorting', 'description', 'parent', 'is_logical', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'sorting': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Короткое имя для сортировки'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'parent': forms.Select(attrs={'class': 'form-control'}),
+            'is_logical': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['description'].required = False
+        self.fields['sorting'].required = False
         self.fields['parent'].required = False
         self.fields['parent'].queryset = Departments.objects.filter(is_active=True)
         

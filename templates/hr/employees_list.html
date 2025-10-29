@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "hr/base.html" %}
 
-{% block content %}
+{% block hr_content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Сотрудники</h2>
     <a href="{% url 'hr:employee_create' %}" class="btn btn-success">Добавить сотрудника</a>
@@ -60,5 +60,5 @@
     </ul>
 </nav>
 {% endif %}
-{% endblock %}
+{% endblock hr_content %}
 

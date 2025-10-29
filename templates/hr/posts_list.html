@@ -1,46 +1,84 @@
-{% extends "base.html" %}
+{% extends "hr/base.html" %}
 
-{% block content %}
+{% block hr_content %}
 <div class="d-flex justify-content-between align-items-center">
   <h2>Штатное расписание</h2>
   <a class="btn btn-success" href="{% url 'hr:post_create' %}">Добавить позицию</a>
-  </div>
+</div>
 
-<div class="table-responsive mt-3">
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>Подразделение</th>
-        <th>Должность</th>
-        <th>Статус</th>
-        <th>Сотрудник</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in posts %}
-      <tr>
-        <td>{{ p.department }}</td>
-        <td>{{ p.postname }}</td>
-        <td>
-          {% if p.status == 'occupied' %}
-            <span class="badge bg-success">Занята</span>
-          {% else %}
-            <span class="badge bg-danger">Вакантна</span>
-          {% endif %}
-        </td>
-        <td>{% if p.employee %}{{ p.employee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-        <td>
-          <a class="btn btn-sm btn-outline-primary" href="{% url 'hr:post_detail' p.pk %}">Открыть</a>
-          <a class="btn btn-sm btn-outline-warning" href="{% url 'hr:post_update' p.pk %}">Изменить</a>
-          <a class="btn btn-sm btn-outline-danger" href="{% url 'hr:post_delete' p.pk %}">Удалить</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5" class="text-muted">Позиции не найдены</td></tr>
+<div class="mt-3">
+  {# Группируем должности по подразделению для использования в аккордеоне #}
+  {% regroup posts by department as department_list %}
+
+  {# Проверяем, есть ли вообще какие-то должности #}
+  {% if department_list %}
+    <div class="accordion" id="staffingAccordion">
+      
+      {# Проходим по каждому подразделению (группе) #}
+      {% for department_group in department_list %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+          <button 
+            class="accordion-button collapsed" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#collapse-{{ forloop.counter }}" 
+            aria-expanded="false" 
+            aria-controls="collapse-{{ forloop.counter }}">
+            {{ department_group.grouper }}
+            <span class="badge bg-secondary ms-2">{{ department_group.list|length }}</span>
+          </button>
+        </h2>
+        <div 
+          id="collapse-{{ forloop.counter }}" 
+          class="accordion-collapse collapse" 
+          aria-labelledby="heading-{{ forloop.counter }}" 
+          data-bs-parent="#staffingAccordion">
+          <div class="accordion-body p-0">
+            
+            {# Внутри тела аккордеона размещаем таблицу с должностями этого подразделения #}
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Должность</th>
+                    <th>Статус</th>
+                    <th>Сотрудник</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for p in department_group.list %}
+                  <tr>
+                    <td>{{ p.postname }}</td>
+                    <td>
+                      {% if p.status == 'occupied' %}
+                        <span class="badge bg-success">Занята</span>
+                      {% else %}
+                        <span class="badge bg-danger">Вакантна</span>
+                      {% endif %}
+                    </td>
+                    <td>{% if p.employee %}{{ p.employee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                    <td>
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'hr:post_detail' p.pk %}">Открыть</a>
+                      <a class="btn btn-sm btn-outline-warning" href="{% url 'hr:post_update' p.pk %}">Изменить</a>
+                      <a class="btn btn-sm btn-outline-danger" href="{% url 'hr:post_delete' p.pk %}">Удалить</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
-{% endblock %}
 
-
+    </div>
+  {% else %}
+    {# Если должностей нет, выводим сообщение #}
+    <p class="text-muted mt-3">Позиции не найдены</p>
+  {% endif %}
+</div>
+{% endblock hr_content %}

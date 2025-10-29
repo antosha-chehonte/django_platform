@@ -1,0 +1,68 @@
+{% extends "hr/base.html" %}
+
+{% block hr_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>История перемещений сотрудников</h2>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Дата начала</th>
+            <th>Дата окончания</th>
+            <th>Сотрудник</th>
+            <th>Подразделение</th>
+            <th>Должность</th>
+            <th>Действие</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in history %}
+          <tr>
+            <td>{{ item.start_date|date:"d.m.Y" }}</td>
+            <td>{% if item.end_date %}{{ item.end_date|date:"d.m.Y" }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>{{ item.employee }}</td>
+            <td>{{ item.post.department }}</td>
+            <td>{{ item.post.postname }}</td>
+            <td>
+              {% if item.action == 'hire' %}
+                <span class="badge bg-success">Принят</span>
+              {% elif item.action == 'move' %}
+                <span class="badge bg-warning text-dark">Перемещен</span>
+              {% elif item.action == 'return' %}
+                <span class="badge bg-primary">Возвращен</span>
+              {% elif item.action == 'dismiss' %}
+                <span class="badge bg-danger">Уволен</span>
+              {% else %}
+                <span class="badge bg-secondary">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-muted">Записей не найдено</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Страницы" class="mt-3">
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a></li>
+        {% endif %}
+        <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock hr_content %}
+
+

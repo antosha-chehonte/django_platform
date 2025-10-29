@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="d-flex flex-column flex-shrink-0 p-3 bg-light" style="min-height: 80vh;">
+            <a href="{% url 'hr:home' %}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+                <span class="fs-4">Управление персоналом</span>
+            </a>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{% url 'hr:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% else %}link-dark{% endif %}" aria-current="page">
+                        Главная
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:employees' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'employees' or request.resolver_match.url_name == 'employee_detail' or request.resolver_match.url_name == 'employee_create' or request.resolver_match.url_name == 'employee_update' or request.resolver_match.url_name == 'employee_delete' %}active{% else %}link-dark{% endif %}">
+                        Сотрудники
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:posts' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'posts' or request.resolver_match.url_name == 'post_detail' or request.resolver_match.url_name == 'post_create' or request.resolver_match.url_name == 'post_update' or request.resolver_match.url_name == 'post_delete' or request.resolver_match.url_name == 'post_hire_new' or request.resolver_match.url_name == 'post_assign_existing' or request.resolver_match.url_name == 'post_move' or request.resolver_match.url_name == 'post_free' %}active{% else %}link-dark{% endif %}">
+                        Штатное расписание
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:history' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% else %}link-dark{% endif %}">
+                        История перемещений
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-9">
+        {% block hr_content %}
+        {% endblock hr_content %}
+    </div>
+</div>
+{% endblock content %}
+

@@ -8,7 +8,6 @@ class Employees(models.Model):
     GENDER_CHOICES = (
         ('M', 'Мужской'),
         ('F', 'Женский'),
-        ('O', 'Другое'),
     )
 
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
@@ -73,7 +72,7 @@ class Posts(models.Model):
                 raise ValidationError({'employee': 'Сотрудник уже занимает другую должность.'})
 
     def __str__(self) -> str:
-        base = f"{self.department} — {self.postname}"
+        base = f"{self.postname}"
         if self.status == self.STATUS_OCCUPIED and self.employee:
             return f"{base} (занята: {self.employee})"
         return f"{base} (вакантна)"
