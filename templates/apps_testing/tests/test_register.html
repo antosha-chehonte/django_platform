@@ -60,6 +60,28 @@
                         {% endif %}
                     </div>
 
+                    <!-- Поле Подразделение -->
+                    <div class="mb-3">
+                        <label for="{{ form.department.id_for_label }}" class="form-label">{{ form.department.label }}</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.department.errors.as_text }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле Должность -->
+                    <div class="mb-3">
+                        <label for="{{ form.postname.id_for_label }}" class="form-label">{{ form.postname.label }}</label>
+                        {{ form.postname }}
+                        {% if form.postname.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.postname.errors.as_text }}
+                            </div>
+                        {% endif %}
+                    </div>
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">Начать тест</button>
                     </div>

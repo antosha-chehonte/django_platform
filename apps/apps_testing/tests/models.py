@@ -62,6 +62,8 @@ class TestSession(models.Model):
     first_name = models.CharField(max_length=100, verbose_name="Имя")
     last_name = models.CharField(max_length=100, verbose_name="Фамилия")
     middle_name = models.CharField(max_length=100, blank=True, verbose_name="Отчество")
+    department = models.ForeignKey('reference.Departments', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Подразделение")
+    postname = models.ForeignKey('reference.Postname', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Должность")
     session_key = models.CharField(max_length=40, unique=True, verbose_name="Ключ сессии")
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)

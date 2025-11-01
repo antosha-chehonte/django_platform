@@ -1,5 +1,6 @@
 # apps_testing/tests/forms.py
 from django import forms
+from apps.reference.models import Departments, Postname
 
 class TestAccessForm(forms.Form):
     password = forms.CharField(
@@ -41,6 +42,16 @@ class TestRegistrationForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Иванович'
         })
+    )
+    department = forms.ModelChoiceField(
+        label="Подразделение",
+        queryset=Departments.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    postname = forms.ModelChoiceField(
+        label="Должность",
+        queryset=Postname.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
 
     def __init__(self, *args, **kwargs):

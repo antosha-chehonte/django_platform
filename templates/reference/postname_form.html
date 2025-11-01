@@ -37,6 +37,16 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="{{ form.sorting.id_for_label }}" class="form-label">
+                            {{ form.sorting.label }}
+                        </label>
+                        {{ form.sorting }}
+                        {% if form.sorting.errors %}
+                        <div class="text-danger">{{ form.sorting.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
                         <label for="{{ form.category.id_for_label }}" class="form-label">
                             {{ form.category.label }}
                         </label>

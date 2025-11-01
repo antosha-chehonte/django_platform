@@ -11,7 +11,7 @@ class DepartmentForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
-            'sorting': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Короткое имя для сортировки'}),
+            'sorting': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'parent': forms.Select(attrs={'class': 'form-control'}),
             'is_logical': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -37,10 +37,11 @@ class PostnameForm(forms.ModelForm):
     
     class Meta:
         model = Postname
-        fields = ['name', 'code', 'description', 'category', 'is_active']
+        fields = ['name', 'code', 'sorting', 'description', 'category', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'sorting': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'category': forms.TextInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -50,4 +51,5 @@ class PostnameForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['description'].required = False
         self.fields['category'].required = False
+        self.fields['sorting'].required = False
 

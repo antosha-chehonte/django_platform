@@ -59,6 +59,8 @@ def test_register(request, test_id):
                 first_name=data['first_name'],
                 last_name=data['last_name'],
                 middle_name=data['middle_name'],
+                department=data['department'],
+                postname=data['postname'],
                 session_key=session_key,
                 selected_questions={'order': question_ids}
             )
