@@ -1,5 +1,5 @@
 from django import forms
-from .models import Departments, Postname
+from .models import Departments, Postname, ITAsset
 
 
 class DepartmentForm(forms.ModelForm):
@@ -51,5 +51,29 @@ class PostnameForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['description'].required = False
         self.fields['category'].required = False
-        self.fields['sorting'].required = False
+
+
+class CSVImportPostnameForm(forms.Form):
+    csv_file = forms.FileField(
+        label='CSV файл',
+        help_text='Файл должен содержать колонки: Название;Код;Код сортировки;Описание;Категория',
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
+    )
+
+
+class ITAssetForm(forms.ModelForm):
+    """Форма для создания и редактирования информационных активов"""
+    
+    class Meta:
+        model = ITAsset
+        fields = ['name', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['description'].required = False
 

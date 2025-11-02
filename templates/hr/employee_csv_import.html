@@ -1,0 +1,58 @@
+{% extends "hr/base.html" %}
+
+{% block hr_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h3>Импорт сотрудников из CSV</h3>
+        
+         <div class="alert alert-info mt-3">
+             <div class="d-flex justify-content-between align-items-start mb-3">
+                 <div>
+                     <h5 class="mb-2">Формат CSV файла:</h5>
+                     <p>Разделитель: <strong>точка с запятой (;)</strong></p>
+                     <p><strong>Обязательные колонки:</strong></p>
+                     <ul>
+                         <li>Фамилия</li>
+                         <li>Имя</li>
+                         <li>Отчество (может быть пустым)</li>
+                         <li>Дата рождения (формат: YYYY-MM-DD, например: 1990-05-15)</li>
+                         <li>Пол (M - мужской, F - женский)</li>
+                         <li>Телефон (может быть пустым)</li>
+                         <li>Email (может быть пустым)</li>
+                     </ul>
+                 </div>
+                 <a href="{% url 'hr:employee_download_csv_template' %}" class="btn btn-success ms-3">
+                     <i class="bi bi-download"></i> Скачать шаблон CSV
+                 </a>
+             </div>
+             <p class="mb-0"><strong>Пример первой строки:</strong><br>
+             <code>Фамилия;Имя;Отчество;Дата рождения;Пол;Телефон;Email</code></p>
+             <p class="mb-0"><strong>Пример данных:</strong><br>
+             <code>Иванов;Иван;Иванович;1990-05-15;M;+79001234567;ivanov@example.com</code></p>
+         </div>
+
+        <form method="post" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.csv_file.id_for_label }}" class="form-label">
+                    {{ form.csv_file.label }}
+                </label>
+                {{ form.csv_file }}
+                {% if form.csv_file.errors %}
+                    <div class="text-danger">{{ form.csv_file.errors }}</div>
+                {% endif %}
+                {% if form.csv_file.help_text %}
+                    <div class="form-text">{{ form.csv_file.help_text }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Импортировать</button>
+                <a href="{% url 'hr:employees' %}" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock hr_content %}
+

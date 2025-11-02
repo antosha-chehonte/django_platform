@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h3>{{ asset.name }}</h3>
+
+<div class="card mt-4">
+    <div class="card-body">
+        {% if asset.description %}
+        <div class="mb-3">
+            <strong>Описание:</strong>
+            <p>{{ asset.description }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Дата создания:</strong> {{ asset.created_at|date:"d.m.Y H:i" }}
+            </div>
+            <div class="col-md-6">
+                <strong>Дата обновления:</strong> {{ asset.updated_at|date:"d.m.Y H:i" }}
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-footer">
+        {% if user.is_authenticated %}
+        <a href="{% url 'reference:itasset_update' asset.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Изменить
+        </a>
+        <a href="{% url 'reference:itasset_delete' asset.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+        <a href="{% url 'reference:itasset_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> К списку
+        </a>
+    </div>
+</div>
+{% endblock %}
+

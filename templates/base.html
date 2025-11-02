@@ -9,6 +9,21 @@
     <!-- CSS Bootstrap 5 -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <link rel="icon" href="{% static 'favicon.ico' %}">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1 0 auto;
+        }
+        footer {
+            flex-shrink: 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -44,6 +59,21 @@
     {% block content %}
     {% endblock %}
 </main>
+
+<footer class="bg-dark text-light mt-5 py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Платформа "Ассистент"</h5>
+                <p class="mb-0">Система автоматизации процессов организации</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-0">Об ошибках и предложениях по улучшению:</p>
+                <p><a href="mailto:support@assistant.ru" class="text-light">cherkashin.a.v@op.ru</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
 
 <!-- JS Bootstrap 5 -->
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>

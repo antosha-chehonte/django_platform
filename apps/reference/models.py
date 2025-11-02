@@ -47,3 +47,21 @@ class Postname(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class ITAsset(models.Model):
+    """Справочник информационных систем и информационных объектов организации"""
+    
+    name = models.CharField(max_length=200, verbose_name="Название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Информационный актив"
+        verbose_name_plural = "Информационные активы"
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name}"

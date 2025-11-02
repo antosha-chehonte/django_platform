@@ -42,6 +42,23 @@
             </div>
         </div>
     </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Информационные активы</h5>
+                <p class="card-text">Справочник информационных систем и информационных объектов организации.</p>
+                <p class="text-muted">
+                    <strong>Записей:</strong> {{ itassets_count }}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'reference:itasset_list' %}" class="btn btn-primary">
+                    <i class="bi bi-server"></i> Перейти к информационным активам
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

@@ -4,9 +4,12 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, View, CreateView, UpdateView, DeleteView
+from django.http import HttpResponse
 
 from .models import Posts, Employees, PositionHistory
-from .forms import HireNewEmployeeForm, AssignExistingEmployeeForm, MoveEmployeeForm, PostsForm
+from .forms import HireNewEmployeeForm, AssignExistingEmployeeForm, MoveEmployeeForm, PostsForm, CSVImportForm
+import csv
+from datetime import datetime
 
 
 @login_required
@@ -207,6 +210,155 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         messages.success(request, 'Сотрудник успешно удален.')
         return super().post(request, *args, **kwargs)
+
+
+class EmployeeCSVImportView(LoginRequiredMixin, View):
+    """Импорт сотрудников из CSV файла"""
+    
+    def get(self, request):
+        form = CSVImportForm()
+        return render(request, 'hr/employee_csv_import.html', {'form': form})
+    
+    def post(self, request):
+        form = CSVImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = request.FILES['csv_file']
+            
+            try:
+                # Декодируем файл с учетом кодировки
+                decoded_file = csv_file.read().decode('utf-8-sig')
+                lines = decoded_file.strip().splitlines()
+                
+                if not lines:
+                    messages.error(request, 'Файл пуст.')
+                    return render(request, 'hr/employee_csv_import.html', {'form': form})
+                
+                imported = 0
+                errors = []
+                
+                # Определяем, есть ли заголовок
+                # Если первая строка содержит "Фамилия" или похожие слова, считаем её заголовком
+                first_line_lower = lines[0].lower()
+                has_header = 'фамилия' in first_line_lower or 'last' in first_line_lower
+                
+                if has_header:
+                    # Используем DictReader с заголовком
+                    csv_reader = csv.DictReader(lines, delimiter=';')
+                    start_row = 2
+                else:
+                    # Используем обычный reader, предполагаем порядок: Фамилия, Имя, Отчество, Дата рождения, Пол, Телефон, Email
+                    csv_reader = csv.reader(lines, delimiter=';')
+                    start_row = 1
+                
+                for row_num, row_data in enumerate(csv_reader, start=start_row):
+                    try:
+                        if has_header:
+                            # DictReader возвращает словарь
+                            row = row_data
+                            last_name = row.get('Фамилия', '').strip()
+                            first_name = row.get('Имя', '').strip()
+                            middle_name = row.get('Отчество', '').strip()
+                            birth_date_str = row.get('Дата рождения', '').strip()
+                            gender = row.get('Пол', '').strip().upper()
+                            phone = row.get('Телефон', '').strip()
+                            email = row.get('Email', '').strip()
+                        else:
+                            # Обычный reader возвращает список
+                            if len(row_data) < 4:
+                                errors.append(f"Строка {row_num}: недостаточно данных (нужно минимум 4 поля)")
+                                continue
+                            last_name = row_data[0].strip() if len(row_data) > 0 else ''
+                            first_name = row_data[1].strip() if len(row_data) > 1 else ''
+                            middle_name = row_data[2].strip() if len(row_data) > 2 else ''
+                            birth_date_str = row_data[3].strip() if len(row_data) > 3 else ''
+                            gender = (row_data[4].strip().upper() if len(row_data) > 4 else '')
+                            phone = row_data[5].strip() if len(row_data) > 5 else ''
+                            email = row_data[6].strip() if len(row_data) > 6 else ''
+                        
+                        # Валидация обязательных полей
+                        if not last_name or not first_name:
+                            errors.append(f"Строка {row_num}: отсутствует фамилия или имя")
+                            continue
+                        
+                        if not birth_date_str:
+                            errors.append(f"Строка {row_num}: отсутствует дата рождения")
+                            continue
+                        
+                        # Парсим дату
+                        try:
+                            birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+                        except ValueError:
+                            errors.append(f"Строка {row_num}: неверный формат даты рождения. Ожидается YYYY-MM-DD, получено: {birth_date_str}")
+                            continue
+                        
+                        # Валидация пола
+                        if gender not in ['M', 'F']:
+                            errors.append(f"Строка {row_num}: неверное значение пола (должно быть M или F), получено: {gender}")
+                            continue
+                        
+                        # Создаем сотрудника
+                        employee = Employees.objects.create(
+                            last_name=last_name,
+                            first_name=first_name,
+                            middle_name=middle_name,
+                            birth_date=birth_date,
+                            gender=gender,
+                            phone=phone if phone else '',
+                            email=email if email else '',
+                            is_active=True
+                        )
+                        imported += 1
+                        
+                    except Exception as e:
+                        errors.append(f"Строка {row_num}: ошибка при обработке - {str(e)}")
+                
+                if imported > 0:
+                    messages.success(request, f'Успешно импортировано сотрудников: {imported}')
+                if errors:
+                    for error in errors[:20]:  # Показываем первые 20 ошибок
+                        messages.warning(request, error)
+                    if len(errors) > 20:
+                        messages.warning(request, f'... и еще {len(errors) - 20} ошибок')
+                
+                if imported == 0 and not errors:
+                    messages.info(request, 'Нет данных для импорта. Проверьте формат файла.')
+                
+                return redirect('hr:employees')
+                
+            except UnicodeDecodeError:
+                messages.error(request, 'Ошибка кодировки файла. Убедитесь, что файл в кодировке UTF-8.')
+                return render(request, 'hr/employee_csv_import.html', {'form': form})
+            except Exception as e:
+                messages.error(request, f'Ошибка при чтении файла: {str(e)}')
+                return render(request, 'hr/employee_csv_import.html', {'form': form})
+        
+        # Если форма невалидна, показываем ошибки
+        for field, field_errors in form.errors.items():
+            for error in field_errors:
+                messages.error(request, f'{field}: {error}')
+        
+        return render(request, 'hr/employee_csv_import.html', {'form': form})
+
+
+class EmployeeCSVTemplateView(LoginRequiredMixin, View):
+    """Генерация шаблона CSV файла для импорта сотрудников"""
+    
+    def get(self, request):
+        # Создаем HTTP ответ с типом CSV без BOM
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="employees_template.csv"'
+        
+        # Создаем CSV writer
+        writer = csv.writer(response, delimiter=';')
+        
+        # Записываем заголовки
+        writer.writerow(['Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Пол', 'Телефон', 'Email'])
+        
+        # Добавляем пример данных
+        writer.writerow(['Иванов', 'Иван', 'Иванович', '1990-05-15', 'M', '+79001234567', 'ivanov@example.com'])
+        writer.writerow(['Петрова', 'Мария', 'Сергеевна', '1985-03-20', 'F', '+79009876543', 'petrova@example.com'])
+        
+        return response
 
 
 class PositionHistoryListView(LoginRequiredMixin, ListView):

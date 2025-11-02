@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
-from .models import Departments, Postname
+from .models import Departments, Postname, ITAsset
 from apps.hr.models import Posts
 
 
@@ -83,3 +83,24 @@ class PostnameAdmin(admin.ModelAdmin):
                 messages.error(request, _('Нельзя деактивировать должность: существуют связанные позиции.'))
                 return
         super().save_model(request, obj, form, change)
+
+
+@admin.register(ITAsset)
+class ITAssetAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'description')
+    list_editable = ('is_active',)
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'description')
+        }),
+        ('Статус', {
+            'fields': ('is_active',)
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')

@@ -68,3 +68,11 @@ class PostsForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+
+class CSVImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label='CSV файл',
+        help_text='Файл должен содержать колонки: Фамилия;Имя;Отчество;Дата рождения (YYYY-MM-DD);Пол (M/F/O);Телефон;Email',
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
+    )
+
