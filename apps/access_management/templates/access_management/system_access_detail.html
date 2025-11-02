@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Доступ к системе</h3>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Сотрудник</dt>
+            <dd class="col-sm-9">
+                <a href="{% url 'hr:employee_detail' access.employee.pk %}">{{ access.employee }}</a>
+            </dd>
+            
+            <dt class="col-sm-3">Система</dt>
+            <dd class="col-sm-9">{{ access.system }}</dd>
+            
+            <dt class="col-sm-3">Логин</dt>
+            <dd class="col-sm-9"><strong>{{ access.login }}</strong></dd>
+            
+            <dt class="col-sm-3">Статус</dt>
+            <dd class="col-sm-9">
+                {% if access.status == 'active' %}
+                    <span class="badge bg-success">{{ access.get_status_display }}</span>
+                {% elif access.status == 'suspended' %}
+                    <span class="badge bg-warning">{{ access.get_status_display }}</span>
+                {% elif access.status == 'blocked' %}
+                    <span class="badge bg-danger">{{ access.get_status_display }}</span>
+                {% elif access.status == 'needs_update' %}
+                    <span class="badge bg-info">{{ access.get_status_display }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ access.get_status_display }}</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Дата получения доступа</dt>
+            <dd class="col-sm-9">{{ access.access_granted_date|date:"d.m.Y" }}</dd>
+            
+            <dt class="col-sm-3">Дата блокировки</dt>
+            <dd class="col-sm-9">{{ access.access_blocked_date|date:"d.m.Y"|default:"—" }}</dd>
+            
+            {% if access.notes %}
+            <dt class="col-sm-3">Примечания</dt>
+            <dd class="col-sm-9">{{ access.notes }}</dd>
+            {% endif %}
+            
+            <dt class="col-sm-3">Дата создания</dt>
+            <dd class="col-sm-9">{{ access.created_at|date:"d.m.Y H:i" }}</dd>
+            
+            <dt class="col-sm-3">Дата обновления</dt>
+            <dd class="col-sm-9">{{ access.updated_at|date:"d.m.Y H:i" }}</dd>
+        </dl>
+    </div>
+    
+    <div class="card-footer">
+        <a href="{% url 'access:system_access_update' access.pk %}" class="btn btn-warning">Изменить</a>
+        <a href="{% url 'access:system_access_delete' access.pk %}" class="btn btn-danger">Удалить</a>
+        <a href="{% url 'access:system_access_list' %}" class="btn btn-secondary">К списку</a>
+    </div>
+</div>
+{% endblock %}
+

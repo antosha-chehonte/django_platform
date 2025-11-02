@@ -43,5 +43,112 @@
         <a href="{% url 'hr:employees' %}" class="btn btn-secondary">Назад</a>
     </div>
 </div>
+
+<!-- Доступы к системам -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Доступы к системам</h5>
+        <a href="{% url 'access:system_access_create' %}?employee={{ employee.pk }}" class="btn btn-sm btn-success">Добавить доступ</a>
+    </div>
+    <div class="card-body">
+        {% if system_accesses %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Система</th>
+                            <th>Логин</th>
+                            <th>Статус</th>
+                            <th>Дата получения</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for access in system_accesses %}
+                        <tr>
+                            <td>{{ access.system }}</td>
+                            <td><strong>{{ access.login }}</strong></td>
+                            <td>
+                                {% if access.status == 'active' %}
+                                    <span class="badge bg-success">{{ access.get_status_display }}</span>
+                                {% elif access.status == 'suspended' %}
+                                    <span class="badge bg-warning">{{ access.get_status_display }}</span>
+                                {% elif access.status == 'blocked' %}
+                                    <span class="badge bg-danger">{{ access.get_status_display }}</span>
+                                {% elif access.status == 'needs_update' %}
+                                    <span class="badge bg-info">{{ access.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ access.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ access.access_granted_date|date:"d.m.Y" }}</td>
+                            <td>
+                                <a href="{% url 'access:system_access_detail' access.pk %}" class="btn btn-sm btn-outline-primary">Просмотр</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">Доступы к системам не найдены.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Цифровые подписи -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Цифровые подписи</h5>
+        <a href="{% url 'access:digital_signature_create' %}?employee={{ employee.pk }}" class="btn btn-sm btn-success">Добавить подпись</a>
+    </div>
+    <div class="card-body">
+        {% if digital_signatures %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Тип сертификата</th>
+                            <th>Серийный номер</th>
+                            <th>Дата окончания</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signature in digital_signatures %}
+                        <tr>
+                            <td>{{ signature.certificate_type }}</td>
+                            <td><strong>{{ signature.certificate_serial }}</strong></td>
+                            <td>
+                                {{ signature.expiry_date|date:"d.m.Y" }}
+                                {% if signature.is_expired %}
+                                    <span class="badge bg-danger">Истек</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if signature.status == 'active' %}
+                                    <span class="badge bg-success">{{ signature.get_status_display }}</span>
+                                {% elif signature.status == 'revoked' %}
+                                    <span class="badge bg-danger">{{ signature.get_status_display }}</span>
+                                {% elif signature.status == 'needs_update' %}
+                                    <span class="badge bg-info">{{ signature.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ signature.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'access:digital_signature_detail' signature.pk %}" class="btn btn-sm btn-outline-primary">Просмотр</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">Цифровые подписи не найдены.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock hr_content %}
 

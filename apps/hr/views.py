@@ -176,6 +176,14 @@ class EmployeeDetailView(LoginRequiredMixin, DetailView):
     model = Employees
     template_name = 'hr/employee_detail.html'
     context_object_name = 'employee'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем доступы к системам
+        from apps.access_management.models import SystemAccess, DigitalSignature
+        context['system_accesses'] = SystemAccess.objects.filter(employee=self.object).select_related('system')
+        context['digital_signatures'] = DigitalSignature.objects.filter(employee=self.object).select_related('certificate_type')
+        return context
 
 
 class EmployeeCreateView(LoginRequiredMixin, CreateView):

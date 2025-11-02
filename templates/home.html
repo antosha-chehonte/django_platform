@@ -6,11 +6,12 @@
         <!-- Цикл для отображения карточек приложений -->
         {% for app in apps_list %}
             <div class="col-md-4 mb-4">
-                <div class="card border-info mb-3">
+                <div class="card border-info mb-3 card h-100">
                     <div class="card-body">
                         <h5 class="card-title">{{ app.name }}</h5>
                         <p class="card-text">{{ app.description }}</p>
-                        <!-- Кнопка-ссылка на приложение -->
+                    </div>
+                    <div class="card-footer">
                         <a href="{% url app.url %}" class="btn btn-primary">Перейти</a>
                     </div>
                 </div>

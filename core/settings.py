@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'apps.apps_testing.moderator',
     'apps.reference',
     'apps.hr',
+    'apps.access_management',
 ]
 
 MIDDLEWARE = [
@@ -93,6 +94,10 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# MEDIA settings для файлов сертификатов
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL для редиректа после логина модератора
 LOGIN_URL = '/testing/moderator/login/'

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>{% if object %}Редактирование{% else %}Создание{% endif %} доступа к системе</h3>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="{{ form.employee.id_for_label }}" class="form-label">
+                    {{ form.employee.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.employee }}
+                {% if form.employee.errors %}
+                    <div class="text-danger">{{ form.employee.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.system.id_for_label }}" class="form-label">
+                    {{ form.system.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.system }}
+                {% if form.system.errors %}
+                    <div class="text-danger">{{ form.system.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.login.id_for_label }}" class="form-label">
+                    {{ form.login.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.login }}
+                {% if form.login.errors %}
+                    <div class="text-danger">{{ form.login.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.status.id_for_label }}" class="form-label">
+                    {{ form.status.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.access_granted_date.id_for_label }}" class="form-label">
+                    {{ form.access_granted_date.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.access_granted_date }}
+                {% if form.access_granted_date.errors %}
+                    <div class="text-danger">{{ form.access_granted_date.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.access_blocked_date.id_for_label }}" class="form-label">
+                    {{ form.access_blocked_date.label }}
+                </label>
+                {{ form.access_blocked_date }}
+                {% if form.access_blocked_date.errors %}
+                    <div class="text-danger">{{ form.access_blocked_date.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                    {{ form.notes.label }}
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger">{{ form.notes.errors }}</div>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'access:system_access_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

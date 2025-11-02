@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Цифровая подпись</h3>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Сотрудник</dt>
+            <dd class="col-sm-9">
+                <a href="{% url 'hr:employee_detail' signature.employee.pk %}">{{ signature.employee }}</a>
+            </dd>
+            
+            <dt class="col-sm-3">Тип сертификата</dt>
+            <dd class="col-sm-9">{{ signature.certificate_type }}</dd>
+            
+            <dt class="col-sm-3">Серийный номер сертификата</dt>
+            <dd class="col-sm-9"><strong>{{ signature.certificate_serial }}</strong></dd>
+            
+            <dt class="col-sm-3">Отпечаток сертификата (alias)</dt>
+            <dd class="col-sm-9"><code>{{ signature.certificate_alias }}</code></dd>
+            
+            <dt class="col-sm-3">Дата окончания срока действия</dt>
+            <dd class="col-sm-9">
+                {{ signature.expiry_date|date:"d.m.Y" }}
+                {% if signature.is_expired %}
+                    <span class="badge bg-danger">Истек</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Серийный номер носителя (токен)</dt>
+            <dd class="col-sm-9">{{ signature.carrier_serial|default:"—" }}</dd>
+            
+            <dt class="col-sm-3">Файл сертификата</dt>
+            <dd class="col-sm-9">
+                {% if signature.certificate_file %}
+                    <a href="{% url 'access:digital_signature_download' signature.pk %}" class="btn btn-sm btn-outline-primary">
+                        Скачать файл
+                    </a>
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </dd>
+            
+            <dt class="col-sm-3">Статус</dt>
+            <dd class="col-sm-9">
+                {% if signature.status == 'active' %}
+                    <span class="badge bg-success">{{ signature.get_status_display }}</span>
+                {% elif signature.status == 'revoked' %}
+                    <span class="badge bg-danger">{{ signature.get_status_display }}</span>
+                {% elif signature.status == 'needs_update' %}
+                    <span class="badge bg-info">{{ signature.get_status_display }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ signature.get_status_display }}</span>
+                {% endif %}
+            </dd>
+            
+            {% if signature.notes %}
+            <dt class="col-sm-3">Примечания</dt>
+            <dd class="col-sm-9">{{ signature.notes }}</dd>
+            {% endif %}
+            
+            <dt class="col-sm-3">Дата создания</dt>
+            <dd class="col-sm-9">{{ signature.created_at|date:"d.m.Y H:i" }}</dd>
+            
+            <dt class="col-sm-3">Дата обновления</dt>
+            <dd class="col-sm-9">{{ signature.updated_at|date:"d.m.Y H:i" }}</dd>
+        </dl>
+    </div>
+    
+    <div class="card-footer">
+        <a href="{% url 'access:digital_signature_update' signature.pk %}" class="btn btn-warning">Изменить</a>
+        <a href="{% url 'access:digital_signature_delete' signature.pk %}" class="btn btn-danger">Удалить</a>
+        <a href="{% url 'access:digital_signature_list' %}" class="btn btn-secondary">К списку</a>
+    </div>
+</div>
+{% endblock %}
+
