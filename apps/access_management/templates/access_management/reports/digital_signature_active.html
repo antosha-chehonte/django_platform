@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Отчет: Сотрудники с активной цифровой подписью</h2>
+
+<form method="get" class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                {{ form.cert_type.label_tag }}
+                {{ form.cert_type }}
+                {% if form.cert_type.errors %}
+                    <div class="text-danger">{{ form.cert_type.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                {{ form.status.label_tag }}
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                {{ form.department.label_tag }}
+                {{ form.department }}
+                {% if form.department.errors %}
+                    <div class="text-danger">{{ form.department.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Применить</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if data %}
+    <div class="d-flex justify-content-end mb-3">
+        <a href="?{{ request.GET.urlencode }}&format=csv" class="btn btn-sm btn-success me-2">Экспорт CSV</a>
+        <a href="?{{ request.GET.urlencode }}&format=excel" class="btn btn-sm btn-success">Экспорт Excel</a>
+    </div>
+    
+    {% for dept_name, items in data.items|dictsort:0 %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>{{ dept_name }} ({{ items|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>ФИО</th>
+                                <th>Должность</th>
+                                <th>Тип сертификата</th>
+                                <th>Серийный номер</th>
+                                <th>Отпечаток</th>
+                                <th>Дата окончания</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td><a href="{% url 'hr:employee_detail' item.employee.pk %}">{{ item.employee }}</a></td>
+                                <td>{{ item.post.postname.name|default:"—" }}</td>
+                                <td>{{ item.signature.certificate_type }}</td>
+                                <td><strong>{{ item.signature.certificate_serial }}</strong></td>
+                                <td><code>{{ item.signature.certificate_alias }}</code></td>
+                                <td>
+                                    {{ item.signature.expiry_date|date:"d.m.Y" }}
+                                    {% if item.signature.is_expired %}
+                                        <span class="badge bg-danger">Истек</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.signature.status == 'active' %}
+                                        <span class="badge bg-success">{{ item.signature.get_status_display }}</span>
+                                    {% elif item.signature.status == 'revoked' %}
+                                        <span class="badge bg-danger">{{ item.signature.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ item.signature.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">
+        Выберите параметры для генерации отчета
+    </div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'access:reports_home' %}" class="btn btn-secondary">Назад к отчетам</a>
+</div>
+{% endblock %}
+

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Отчет: Истекающие/просроченные доступы</h2>
+
+<form method="get" class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">{{ form.report_type.label }}</label>
+                <div class="form-check">
+                    {% for choice in form.report_type %}
+                        <div class="form-check">
+                            {{ choice.tag }}
+                            <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                {{ choice.choice_label }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if form.report_type.errors %}
+                    <div class="text-danger">{{ form.report_type.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                {{ form.days.label_tag }}
+                {{ form.days }}
+                {% if form.days.errors %}
+                    <div class="text-danger">{{ form.days.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Применить</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if data %}
+    <div class="d-flex justify-content-end mb-3">
+        <a href="?{{ request.GET.urlencode }}&format=csv" class="btn btn-sm btn-success me-2">Экспорт CSV</a>
+        <a href="?{{ request.GET.urlencode }}&format=excel" class="btn btn-sm btn-success">Экспорт Excel</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Подразделение</th>
+                            <th>ФИО</th>
+                            <th>Должность</th>
+                            <th>Система</th>
+                            <th>Логин</th>
+                            <th>Статус</th>
+                            <th>Дата получения</th>
+                            <th>Дата блокировки</th>
+                            <th>Дней до/после</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in data %}
+                        <tr>
+                            <td>{{ item.department.name|default:"Не указано" }}</td>
+                            <td><a href="{% url 'hr:employee_detail' item.employee.pk %}">{{ item.employee }}</a></td>
+                            <td>{{ item.post.postname.name|default:"—" }}</td>
+                            <td>{{ item.access.system }}</td>
+                            <td><strong>{{ item.access.login }}</strong></td>
+                            <td>
+                                {% if item.access.status == 'needs_update' %}
+                                    <span class="badge bg-info">{{ item.access.get_status_display }}</span>
+                                {% elif item.access.status == 'active' %}
+                                    <span class="badge bg-success">{{ item.access.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ item.access.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.access.access_granted_date|date:"d.m.Y" }}</td>
+                            <td>{{ item.access.access_blocked_date|date:"d.m.Y"|default:"—" }}</td>
+                            <td>
+                                {% if item.days_diff is not None %}
+                                    {% if item.is_expired %}
+                                        <span class="badge bg-danger">Просрочено: {{ item.abs_days_diff }} дн.</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Дней до: {{ item.days_diff }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Выберите параметры для генерации отчета
+    </div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'access:reports_home' %}" class="btn btn-secondary">Назад к отчетам</a>
+</div>
+{% endblock %}
+

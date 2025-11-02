@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .reports import views as reports
 
 app_name = 'access'
 
@@ -27,5 +28,13 @@ urlpatterns = [
     path('certificate-types/create/', views.CertificateTypeCreateView.as_view(), name='certificate_type_create'),
     path('certificate-types/<int:pk>/update/', views.CertificateTypeUpdateView.as_view(), name='certificate_type_update'),
     path('certificate-types/<int:pk>/delete/', views.CertificateTypeDeleteView.as_view(), name='certificate_type_delete'),
+    
+    # Отчеты
+    path('reports/', reports.ReportsHomeView.as_view(), name='reports_home'),
+    path('reports/system-access/active/', reports.SystemAccessActiveReportView.as_view(), name='report_system_access_active'),
+    path('reports/system-access/expiring/', reports.SystemAccessExpiringReportView.as_view(), name='report_system_access_expiring'),
+    path('reports/digital-signature/active/', reports.DigitalSignatureActiveReportView.as_view(), name='report_signature_active'),
+    path('reports/digital-signature/missing/', reports.DigitalSignatureMissingReportView.as_view(), name='report_signature_missing'),
+    path('reports/digital-signature/expiring/', reports.DigitalSignatureExpiringReportView.as_view(), name='report_signature_expiring'),
 ]
 
