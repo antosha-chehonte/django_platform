@@ -2,25 +2,33 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
-from .models import Departments, Postname, ITAsset
+from .models import Departments, Postname, ITAsset, CertificateType
 from apps.hr.models import Posts
 
 
 @admin.register(Departments)
 class DepartmentsAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'parent', 'is_active', 'created_at')
+    list_display = ('code', 'name', 'dep_short_name', 'email', 'city', 'net_id', 'parent', 'is_active', 'created_at')
     list_filter = ('is_active', 'created_at', 'parent')
-    search_fields = ('name', 'code', 'description')
+    search_fields = ('name', 'code', 'description', 'dep_short_name', 'email', 'city', 'net_id')
     list_editable = ('is_active',)
     fieldsets = (
         ('Основная информация', {
-            'fields': ('code', 'name', 'description')
+            'fields': ('code', 'name', 'dep_short_name', 'description', 'email')
+        }),
+        ('Адрес местонахождения', {
+            'fields': ('zipcode', 'city', 'street', 'bldg'),
+            'classes': ('collapse',)
+        }),
+        ('Сетевая информация', {
+            'fields': ('net_id', 'ip', 'mask'),
+            'classes': ('collapse',)
         }),
         ('Иерархия', {
             'fields': ('parent',)
         }),
         ('Статус', {
-            'fields': ('is_active',)
+            'fields': ('is_active', 'is_logical')
         }),
         ('Даты', {
             'fields': ('created_at', 'updated_at'),
@@ -104,3 +112,23 @@ class ITAssetAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(CertificateType)
+class CertificateTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_active', 'created_at', 'updated_at')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'description')
+        }),
+        ('Статус', {
+            'fields': ('is_active',)
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

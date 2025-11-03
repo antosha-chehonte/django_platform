@@ -16,8 +16,13 @@ class Employees(models.Model):
     birth_date = models.DateField(verbose_name='Дата рождения')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, verbose_name='Пол')
 
-    phone = models.CharField(max_length=50, blank=True, verbose_name='Телефон')
+    work_phone = models.CharField(max_length=50, blank=True, verbose_name='Рабочий телефон')
+    mobile_phone = models.CharField(max_length=50, blank=True, verbose_name='Мобильный телефон')
     email = models.EmailField(blank=True, verbose_name='Email')
+
+    appointment_date = models.DateField(null=True, blank=True, verbose_name='Дата назначения на должность')
+    appointment_order_date = models.DateField(null=True, blank=True, verbose_name='Дата приказа о назначении')
+    appointment_order_number = models.CharField(max_length=100, blank=True, verbose_name='Номер приказа о назначении')
 
     is_active = models.BooleanField(default=True, verbose_name='Активен')
 

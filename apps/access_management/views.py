@@ -4,12 +4,13 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.db.models import Q
-from django.http import HttpResponse, FileResponse
+from django.http import FileResponse
 from django.utils import timezone
 from datetime import timedelta
-from .models import CertificateType, SystemAccess, DigitalSignature
-from .forms import CertificateTypeForm, SystemAccessForm, DigitalSignatureForm
+from .models import SystemAccess, DigitalSignature
+from .forms import SystemAccessForm, DigitalSignatureForm
 from apps.hr.models import Employees
+from apps.reference.models import CertificateType
 
 
 def access_home(request):
@@ -261,62 +262,4 @@ class DigitalSignatureDownloadView(LoginRequiredMixin, View):
             return redirect('access:digital_signature_detail', pk=pk)
 
 
-# ========== CertificateType Views ==========
-
-class CertificateTypeListView(LoginRequiredMixin, ListView):
-    """Список типов сертификатов"""
-    model = CertificateType
-    template_name = 'access_management/certificate_type_list.html'
-    context_object_name = 'cert_types'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        queryset = CertificateType.objects.all()
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(description__icontains=search)
-            )
-        return queryset
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
-        return context
-
-
-class CertificateTypeCreateView(LoginRequiredMixin, CreateView):
-    """Создание нового типа сертификата"""
-    model = CertificateType
-    form_class = CertificateTypeForm
-    template_name = 'access_management/certificate_type_form.html'
-    success_url = reverse_lazy('access:certificate_type_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Тип сертификата успешно создан.')
-        return super().form_valid(form)
-
-
-class CertificateTypeUpdateView(LoginRequiredMixin, UpdateView):
-    """Редактирование типа сертификата"""
-    model = CertificateType
-    form_class = CertificateTypeForm
-    template_name = 'access_management/certificate_type_form.html'
-    success_url = reverse_lazy('access:certificate_type_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, 'Тип сертификата успешно обновлен.')
-        return super().form_valid(form)
-
-
-class CertificateTypeDeleteView(LoginRequiredMixin, DeleteView):
-    """Удаление типа сертификата"""
-    model = CertificateType
-    template_name = 'access_management/certificate_type_confirm_delete.html'
-    success_url = reverse_lazy('access:certificate_type_list')
-    
-    def delete(self, request, *args, **kwargs):
-        messages.success(self.request, 'Тип сертификата успешно удален.')
-        return super().delete(request, *args, **kwargs)
 

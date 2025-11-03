@@ -14,6 +14,7 @@ urlpatterns = [
     path('reference/', include('apps.reference.urls', namespace='reference')),
     path('hr/', include(('apps.hr.urls', 'hr'), namespace='hr')),
     path('access/', include(('apps.access_management.urls', 'access'), namespace='access')),
+    path('directory/', include(('apps.directory.urls', 'directory'), namespace='directory')),
 ]
 
 # Для разработки: обслуживание медиа-файлов

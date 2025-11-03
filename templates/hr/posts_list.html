@@ -3,7 +3,10 @@
 {% block hr_content %}
 <div class="d-flex justify-content-between align-items-center">
   <h2>Штатное расписание</h2>
-  <a class="btn btn-success" href="{% url 'hr:post_create' %}">Добавить позицию</a>
+  <div>
+    <a class="btn btn-primary" href="{% url 'hr:post_import_csv' %}">Импорт из CSV</a>
+    <a class="btn btn-success" href="{% url 'hr:post_create' %}">Добавить позицию</a>
+  </div>
 </div>
 
 <div class="mt-3">

@@ -16,7 +16,8 @@
                 <th>ФИО</th>
                 <th>Дата рождения</th>
                 <th>Пол</th>
-                <th>Телефон</th>
+                <th>Рабочий телефон</th>
+                <th>Мобильный телефон</th>
                 <th>Email</th>
                 <th>Статус</th>
                 <th>Действия</th>
@@ -28,7 +29,8 @@
                 <td>{{ emp.last_name }} {{ emp.first_name }} {{ emp.middle_name }}</td>
                 <td>{{ emp.birth_date|date:"d.m.Y" }}</td>
                 <td>{{ emp.get_gender_display }}</td>
-                <td>{{ emp.phone|default:"—" }}</td>
+                <td>{{ emp.work_phone|default:"—" }}</td>
+                <td>{{ emp.mobile_phone|default:"—" }}</td>
                 <td>{{ emp.email|default:"—" }}</td>
                 <td>
                     {% if emp.is_active %}
@@ -44,7 +46,7 @@
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="7" class="text-muted">Сотрудники не найдены</td></tr>
+            <tr><td colspan="8" class="text-muted">Сотрудники не найдены</td></tr>
             {% endfor %}
         </tbody>
     </table>

@@ -1,0 +1,127 @@
+{% extends "directory/base.html" %}
+
+{% block directory_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Справочник сотрудников</h2>
+</div>
+
+{# Форма поиска #}
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="{% url 'directory:directory' %}" class="row g-3">
+      <div class="col-md-10">
+        <input 
+          type="text" 
+          class="form-control" 
+          name="search" 
+          placeholder="Поиск по ФИО сотрудника, должности, подразделению, телефону или email..." 
+          value="{{ search_query }}"
+        >
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Поиск</button>
+      </div>
+      {% if search_query %}
+      <div class="col-12">
+        <a href="{% url 'directory:directory' %}" class="btn btn-sm btn-outline-secondary">Очистить поиск</a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="mt-3">
+  {# Группируем должности по подразделению для использования в аккордеоне #}
+  {% regroup posts by department as department_list %}
+
+  {# Проверяем, есть ли вообще какие-то должности #}
+  {% if department_list %}
+    <div class="accordion" id="directoryAccordion">
+      
+      {# Проходим по каждому подразделению (группе) #}
+      {% for department_group in department_list %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+          <button 
+            class="accordion-button collapsed" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#collapse-{{ forloop.counter }}" 
+            aria-expanded="false" 
+            aria-controls="collapse-{{ forloop.counter }}">
+            {{ department_group.grouper }}
+            <span class="badge bg-secondary ms-2">{{ department_group.list|length }}</span>
+          </button>
+        </h2>
+        <div 
+          id="collapse-{{ forloop.counter }}" 
+          class="accordion-collapse collapse" 
+          aria-labelledby="heading-{{ forloop.counter }}" 
+          data-bs-parent="#directoryAccordion">
+          <div class="accordion-body p-0">
+            
+            {# Внутри тела аккордеона размещаем таблицу с сотрудниками этого подразделения #}
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Должность</th>
+                    <th>Сотрудник</th>
+                    <th>Рабочий телефон</th>
+                    <th>Мобильный телефон</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for post in department_group.list %}
+                  <tr>
+                    <td>{{ post.postname }}</td>
+                    <td>
+                      <strong>{{ post.employee }}</strong>
+                    </td>
+                    <td>
+                      {% if post.employee.work_phone %}
+                        <a href="tel:{{ post.employee.work_phone }}">{{ post.employee.work_phone }}</a>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if post.employee.mobile_phone %}
+                        <a href="tel:{{ post.employee.mobile_phone }}">{{ post.employee.mobile_phone }}</a>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if post.employee.email %}
+                        <a href="mailto:{{ post.employee.email }}">{{ post.employee.email }}</a>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    {# Если сотрудников нет, выводим сообщение #}
+    <div class="alert alert-info mt-3">
+      {% if search_query %}
+        <p class="mb-0">По запросу "{{ search_query }}" сотрудники не найдены.</p>
+      {% else %}
+        <p class="mb-0">Сотрудники не найдены.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock directory_content %}
+

@@ -32,6 +32,46 @@
                 {% endif %}
             </dd>
             
+            {% if department.dep_short_name %}
+            <dt class="col-sm-3">Короткое наименование:</dt>
+            <dd class="col-sm-9">{{ department.dep_short_name }}</dd>
+            {% endif %}
+            
+            {% if department.email %}
+            <dt class="col-sm-3">Email:</dt>
+            <dd class="col-sm-9">
+                <a href="mailto:{{ department.email }}">{{ department.email }}</a>
+            </dd>
+            {% endif %}
+            
+            <!-- Адрес местонахождения -->
+            {% if department.zipcode or department.city or department.street or department.bldg %}
+            <dt class="col-sm-3">Адрес:</dt>
+            <dd class="col-sm-9">
+                {% if department.zipcode %}{{ department.zipcode }}{% if department.city or department.street or department.bldg %}, {% endif %}{% endif %}
+                {% if department.city %}{{ department.city }}{% endif %}
+                {% if department.street %}{% if department.city %}, {% endif %}{{ department.street }}{% endif %}
+                {% if department.bldg %}{% if department.street or department.city %}, {% endif %}{{ department.bldg }}{% endif %}
+            </dd>
+            {% endif %}
+            
+            <!-- Сетевая информация -->
+            {% if department.net_id or department.ip or department.mask is not None %}
+            <dt class="col-sm-3">Сетевая информация:</dt>
+            <dd class="col-sm-9">
+                {% if department.net_id %}
+                    <strong>ID узла:</strong> {{ department.net_id }}
+                {% endif %}
+                {% if department.ip %}
+                    {% if department.net_id %} | {% endif %}
+                    <strong>IP:</strong> {{ department.ip }}
+                {% endif %}
+                {% if department.mask is not None %}
+                    /{{ department.mask }}
+                {% endif %}
+            </dd>
+            {% endif %}
+            
             <dt class="col-sm-3">Статус:</dt>
             <dd class="col-sm-9">
                 {% if department.is_active %}

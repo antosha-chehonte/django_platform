@@ -1,14 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import CertificateType, SystemAccess, DigitalSignature
-
-
-@admin.register(CertificateType)
-class CertificateTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_active', 'created_at', 'updated_at')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'description')
-    readonly_fields = ('created_at', 'updated_at')
+from .models import SystemAccess, DigitalSignature
 
 
 @admin.register(SystemAccess)

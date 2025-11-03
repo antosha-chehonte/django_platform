@@ -1,6 +1,5 @@
 from django import forms
-from apps.reference.models import ITAsset, Departments
-from apps.access_management.models import CertificateType
+from apps.reference.models import ITAsset, Departments, CertificateType
 
 
 class SystemAccessActiveReportForm(forms.Form):

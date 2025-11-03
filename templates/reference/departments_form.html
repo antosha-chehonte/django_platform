@@ -56,6 +56,115 @@
                         {% endif %}
                     </div>
                     
+                    <!-- Короткое наименование -->
+                    <div class="mb-3">
+                        <label for="{{ form.dep_short_name.id_for_label }}" class="form-label">
+                            {{ form.dep_short_name.label }}
+                        </label>
+                        {{ form.dep_short_name }}
+                        {% if form.dep_short_name.errors %}
+                        <div class="text-danger">{{ form.dep_short_name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            {{ form.email.label }}
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Адрес местонахождения -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Адрес местонахождения</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="{{ form.zipcode.id_for_label }}" class="form-label">
+                                        {{ form.zipcode.label }}
+                                    </label>
+                                    {{ form.zipcode }}
+                                    {% if form.zipcode.errors %}
+                                    <div class="text-danger small">{{ form.zipcode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-9">
+                                    <label for="{{ form.city.id_for_label }}" class="form-label">
+                                        {{ form.city.label }}
+                                    </label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                    <div class="text-danger small">{{ form.city.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-8">
+                                    <label for="{{ form.street.id_for_label }}" class="form-label">
+                                        {{ form.street.label }}
+                                    </label>
+                                    {{ form.street }}
+                                    {% if form.street.errors %}
+                                    <div class="text-danger small">{{ form.street.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.bldg.id_for_label }}" class="form-label">
+                                        {{ form.bldg.label }}
+                                    </label>
+                                    {{ form.bldg }}
+                                    {% if form.bldg.errors %}
+                                    <div class="text-danger small">{{ form.bldg.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Сетевая информация -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Сетевая информация</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="{{ form.net_id.id_for_label }}" class="form-label">
+                                        {{ form.net_id.label }}
+                                    </label>
+                                    {{ form.net_id }}
+                                    {% if form.net_id.errors %}
+                                    <div class="text-danger small">{{ form.net_id.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.ip.id_for_label }}" class="form-label">
+                                        {{ form.ip.label }}
+                                    </label>
+                                    {{ form.ip }}
+                                    {% if form.ip.errors %}
+                                    <div class="text-danger small">{{ form.ip.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.mask.id_for_label }}" class="form-label">
+                                        {{ form.mask.label }}
+                                    </label>
+                                    {{ form.mask }}
+                                    {% if form.mask.errors %}
+                                    <div class="text-danger small">{{ form.mask.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="{{ form.parent.id_for_label }}" class="form-label">
                             {{ form.parent.label }}

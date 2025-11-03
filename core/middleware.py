@@ -6,7 +6,7 @@ from urllib.parse import quote as urlquote
 class RequireLoginMiddleware:
     """
     Require authentication for all views except:
-    - Public apps: project_info ('/project-info/') and tests ('/testing/')
+    - Public apps: project_info ('/project-info/'), tests ('/testing/'), directory ('/directory/')
       Note: '/testing/moderator/' remains protected.
     - Root ('/') landing page if present
     - Static and media files
@@ -16,7 +16,7 @@ class RequireLoginMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.always_allow_prefixes = ('/static/', '/media/')
-        self.public_prefixes = ('/', '/project-info/', '/testing/')
+        self.public_prefixes = ('/', '/project-info/', '/testing/', '/directory/')
         self.protected_subprefixes = ('/testing/moderator/',)
         self.allowed_paths = set(filter(None, [getattr(settings, 'LOGIN_URL', None), '/admin/login/']))
 

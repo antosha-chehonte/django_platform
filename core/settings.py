@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'apps.reference',
     'apps.hr',
     'apps.access_management',
+    'apps.directory',
 ]
 
 MIDDLEWARE = [

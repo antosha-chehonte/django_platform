@@ -21,11 +21,23 @@
             <dt class="col-sm-3">Пол</dt>
             <dd class="col-sm-9">{{ employee.get_gender_display }}</dd>
             
-            <dt class="col-sm-3">Телефон</dt>
-            <dd class="col-sm-9">{{ employee.phone|default:"—" }}</dd>
+            <dt class="col-sm-3">Рабочий телефон</dt>
+            <dd class="col-sm-9">{{ employee.work_phone|default:"—" }}</dd>
+            
+            <dt class="col-sm-3">Мобильный телефон</dt>
+            <dd class="col-sm-9">{{ employee.mobile_phone|default:"—" }}</dd>
             
             <dt class="col-sm-3">Email</dt>
             <dd class="col-sm-9">{{ employee.email|default:"—" }}</dd>
+            
+            <dt class="col-sm-3">Дата назначения на должность</dt>
+            <dd class="col-sm-9">{% if employee.appointment_date %}{{ employee.appointment_date|date:"d.m.Y" }}{% else %}—{% endif %}</dd>
+            
+            <dt class="col-sm-3">Дата приказа о назначении</dt>
+            <dd class="col-sm-9">{% if employee.appointment_order_date %}{{ employee.appointment_order_date|date:"d.m.Y" }}{% else %}—{% endif %}</dd>
+            
+            <dt class="col-sm-3">Номер приказа о назначении</dt>
+            <dd class="col-sm-9">{{ employee.appointment_order_number|default:"—" }}</dd>
             
             <dt class="col-sm-3">Статус</dt>
             <dd class="col-sm-9">

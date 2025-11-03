@@ -9,7 +9,7 @@
 </div>
 
 <div class="row">
-    <div class="col-md-6 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Подразделения</h5>
@@ -26,7 +26,7 @@
         </div>
     </div>
     
-    <div class="col-md-6 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Должности</h5>
@@ -43,7 +43,7 @@
         </div>
     </div>
     
-    <div class="col-md-6 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Информационные активы</h5>
@@ -55,6 +55,23 @@
             <div class="card-footer">
                 <a href="{% url 'reference:itasset_list' %}" class="btn btn-primary">
                     <i class="bi bi-server"></i> Перейти к информационным активам
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Типы сертификатов</h5>
+                <p class="card-text">Справочник типов сертификатов цифровой подписи.</p>
+                <p class="text-muted">
+                    <strong>Записей:</strong> {{ cert_types_count }}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'reference:certificate_type_list' %}" class="btn btn-primary">
+                    Перейти к типам сертификатов
                 </a>
             </div>
         </div>

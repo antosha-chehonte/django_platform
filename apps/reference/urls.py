@@ -13,6 +13,8 @@ urlpatterns = [
     path('departments/create/', views.DepartmentCreateView.as_view(), name='departments_create'),
     path('departments/<int:pk>/update/', views.DepartmentUpdateView.as_view(), name='departments_update'),
     path('departments/<int:pk>/delete/', views.DepartmentDeleteView.as_view(), name='departments_delete'),
+    path('departments/import-csv/', views.DepartmentCSVImportView.as_view(), name='departments_import_csv'),
+    path('departments/download-csv-template/', views.DepartmentCSVTemplateView.as_view(), name='departments_download_csv_template'),
     
     # Должности
     path('postname/', views.PostnameListView.as_view(), name='postname_list'),
@@ -29,5 +31,11 @@ urlpatterns = [
     path('itasset/create/', views.ITAssetCreateView.as_view(), name='itasset_create'),
     path('itasset/<int:pk>/update/', views.ITAssetUpdateView.as_view(), name='itasset_update'),
     path('itasset/<int:pk>/delete/', views.ITAssetDeleteView.as_view(), name='itasset_delete'),
+    
+    # Типы сертификатов
+    path('certificate-types/', views.CertificateTypeListView.as_view(), name='certificate_type_list'),
+    path('certificate-types/create/', views.CertificateTypeCreateView.as_view(), name='certificate_type_create'),
+    path('certificate-types/<int:pk>/update/', views.CertificateTypeUpdateView.as_view(), name='certificate_type_update'),
+    path('certificate-types/<int:pk>/delete/', views.CertificateTypeDeleteView.as_view(), name='certificate_type_delete'),
 ]
 

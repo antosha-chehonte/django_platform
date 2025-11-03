@@ -23,12 +23,6 @@ urlpatterns = [
     path('signatures/<int:pk>/delete/', views.DigitalSignatureDeleteView.as_view(), name='digital_signature_delete'),
     path('signatures/<int:pk>/download/', views.DigitalSignatureDownloadView.as_view(), name='digital_signature_download'),
     
-    # Типы сертификатов
-    path('certificate-types/', views.CertificateTypeListView.as_view(), name='certificate_type_list'),
-    path('certificate-types/create/', views.CertificateTypeCreateView.as_view(), name='certificate_type_create'),
-    path('certificate-types/<int:pk>/update/', views.CertificateTypeUpdateView.as_view(), name='certificate_type_update'),
-    path('certificate-types/<int:pk>/delete/', views.CertificateTypeDeleteView.as_view(), name='certificate_type_delete'),
-    
     # Отчеты
     path('reports/', reports.ReportsHomeView.as_view(), name='reports_home'),
     path('reports/system-access/active/', reports.SystemAccessActiveReportView.as_view(), name='report_system_access_active'),

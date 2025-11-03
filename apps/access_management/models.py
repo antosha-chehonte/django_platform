@@ -13,24 +13,6 @@ def validate_file_size(value):
         )
 
 
-class CertificateType(models.Model):
-    """Справочник типов сертификатов цифровой подписи"""
-    
-    name = models.CharField(max_length=200, verbose_name="Название типа")
-    description = models.TextField(blank=True, verbose_name="Описание")
-    is_active = models.BooleanField(default=True, verbose_name="Активен")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
-    
-    class Meta:
-        verbose_name = "Тип сертификата"
-        verbose_name_plural = "Типы сертификатов"
-        ordering = ['name']
-    
-    def __str__(self):
-        return self.name
-
-
 class SystemAccess(models.Model):
     """Доступ сотрудника к информационной системе"""
     
@@ -114,7 +96,7 @@ class DigitalSignature(models.Model):
         verbose_name='Сотрудник'
     )
     certificate_type = models.ForeignKey(
-        'access_management.CertificateType',
+        'reference.CertificateType',
         on_delete=models.PROTECT,
         verbose_name='Тип сертификата'
     )

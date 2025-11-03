@@ -40,6 +40,11 @@ def home_page(request):
             'description': 'Приложение для управления доступами к информационным системам.',
             'url': 'access:home'
         },
+        {
+            'name': 'Справочник организации',
+            'description': 'Справочник организации с иерархической структурой.',
+            'url': 'directory:directory'
+        },
     ]
 
     context = {
