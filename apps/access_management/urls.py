@@ -22,6 +22,7 @@ urlpatterns = [
     path('signatures/<int:pk>/update/', views.DigitalSignatureUpdateView.as_view(), name='digital_signature_update'),
     path('signatures/<int:pk>/delete/', views.DigitalSignatureDeleteView.as_view(), name='digital_signature_delete'),
     path('signatures/<int:pk>/download/', views.DigitalSignatureDownloadView.as_view(), name='digital_signature_download'),
+    path('signatures/parse-certificate/', views.CertificateParseAjaxView.as_view(), name='certificate_parse_ajax'),
     
     # Отчеты
     path('reports/', reports.ReportsHomeView.as_view(), name='reports_home'),

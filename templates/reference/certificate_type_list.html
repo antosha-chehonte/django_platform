@@ -34,7 +34,7 @@
                         <th>Название</th>
                         <th>Описание</th>
                         <th>Активен</th>
-                        <th>Действия</th>
+                        <th style="width: 120px;">Действия</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,11 +49,15 @@
                                 <span class="badge bg-secondary">Нет</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="text-nowrap">
                             <a href="{% url 'reference:certificate_type_update' cert_type.pk %}" 
-                               class="btn btn-sm btn-outline-warning">Изменить</a>
+                               class="btn btn-sm btn-outline-warning me-1" title="Изменить">
+                                <i class="bi bi-pencil"></i>
+                            </a>
                             <a href="{% url 'reference:certificate_type_delete' cert_type.pk %}" 
-                               class="btn btn-sm btn-outline-danger">Удалить</a>
+                               class="btn btn-sm btn-outline-danger" title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

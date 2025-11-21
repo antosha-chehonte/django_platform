@@ -11,6 +11,27 @@ from .forms import DepartmentForm, PostnameForm, CSVImportPostnameForm, CSVImpor
 import csv
 
 
+def build_department_tree(departments):
+    """
+    Строит дерево подразделений из плоского списка, отсортированного по sorting.
+    Возвращает список корневых элементов, каждый с атрибутом 'children' (список дочерних).
+    """
+    # Создаем словарь для быстрого доступа
+    dept_dict = {dept.pk: {'dept': dept, 'children': []} for dept in departments}
+    roots = []
+    
+    for dept in departments:
+        node = dept_dict[dept.pk]
+        if dept.parent and dept.parent.pk in dept_dict:
+            # Добавляем к родителю
+            dept_dict[dept.parent.pk]['children'].append(node)
+        else:
+            # Корневой элемент
+            roots.append(node)
+    
+    return roots
+
+
 class DepartmentListView(LoginRequiredMixin, ListView):
     """Список подразделений"""
     model = Departments
@@ -19,7 +40,7 @@ class DepartmentListView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        queryset = Departments.objects.filter(is_active=True)
+        queryset = Departments.objects.filter(is_active=True).order_by('sorting', 'name')
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
@@ -32,6 +53,9 @@ class DepartmentListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search'] = self.request.GET.get('search', '')
+        # Добавляем дерево подразделений для отображения иерархии
+        departments_list = list(context['departments'])
+        context['department_tree'] = build_department_tree(departments_list)
         return context
 
 
@@ -122,6 +146,15 @@ class DepartmentCSVImportView(LoginRequiredMixin, View):
                             code = row.get('Код', '').strip()
                             sorting = row.get('Код сортировки', '').strip()
                             description = row.get('Описание', '').strip()
+                            dep_short_name = row.get('Короткое наименование', '').strip()
+                            email = row.get('Email', '').strip()
+                            zipcode = row.get('Почтовый индекс', '').strip()
+                            city = row.get('Город', '').strip()
+                            street = row.get('Улица', '').strip()
+                            bldg = row.get('Здание', '').strip()
+                            net_id = row.get('Идентификатор узла', '').strip()
+                            ip = row.get('IP адрес', '').strip()
+                            mask_str = row.get('Маска', '').strip()
                             parent_str = row.get('Родительское подразделение', '').strip()
                             is_logical_str = row.get('Логическое', '').strip()
                             is_active_str = row.get('Активно', '').strip()
@@ -133,9 +166,18 @@ class DepartmentCSVImportView(LoginRequiredMixin, View):
                             code = row_data[1].strip() if len(row_data) > 1 else ''
                             sorting = row_data[2].strip() if len(row_data) > 2 else ''
                             description = row_data[3].strip() if len(row_data) > 3 else ''
-                            parent_str = row_data[4].strip() if len(row_data) > 4 else ''
-                            is_logical_str = row_data[5].strip() if len(row_data) > 5 else ''
-                            is_active_str = row_data[6].strip() if len(row_data) > 6 else ''
+                            dep_short_name = row_data[4].strip() if len(row_data) > 4 else ''
+                            email = row_data[5].strip() if len(row_data) > 5 else ''
+                            zipcode = row_data[6].strip() if len(row_data) > 6 else ''
+                            city = row_data[7].strip() if len(row_data) > 7 else ''
+                            street = row_data[8].strip() if len(row_data) > 8 else ''
+                            bldg = row_data[9].strip() if len(row_data) > 9 else ''
+                            net_id = row_data[10].strip() if len(row_data) > 10 else ''
+                            ip = row_data[11].strip() if len(row_data) > 11 else ''
+                            mask_str = row_data[12].strip() if len(row_data) > 12 else ''
+                            parent_str = row_data[13].strip() if len(row_data) > 13 else ''
+                            is_logical_str = row_data[14].strip() if len(row_data) > 14 else ''
+                            is_active_str = row_data[15].strip() if len(row_data) > 15 else ''
                         
                         # Валидация обязательных полей
                         if not name or not code:
@@ -177,17 +219,75 @@ class DepartmentCSVImportView(LoginRequiredMixin, View):
                             elif is_active_str_lower in ['true', '1', 'да', 'yes']:
                                 is_active = True
                         
-                        # Создаем подразделение
-                        Departments.objects.create(
-                            name=name,
-                            code=code,
-                            sorting=sorting,
-                            description=description,
-                            parent=parent,
-                            is_logical=is_logical,
-                            is_active=is_active
-                        )
-                        imported += 1
+                        # Обработка маски
+                        mask = None
+                        if mask_str:
+                            try:
+                                mask = int(mask_str)
+                                if mask < 0 or mask > 32:
+                                    errors.append(f"Строка {row_num}: маска должна быть в диапазоне от 0 до 32")
+                                    continue
+                            except ValueError:
+                                errors.append(f"Строка {row_num}: неверный формат маски: {mask_str}")
+                                continue
+                        
+                        # Валидация net_id
+                        if net_id and len(net_id) > 4:
+                            errors.append(f"Строка {row_num}: идентификатор узла должен содержать не более 4 символов")
+                            continue
+                        
+                        # Валидация email (если указан)
+                        if email and '@' not in email:
+                            errors.append(f"Строка {row_num}: неверный формат email: {email}")
+                            continue
+                        
+                        # Валидация sorting, если указан
+                        if sorting:
+                            import re
+                            if not re.match(r'^(\d{3})(\.\d{3})*$', sorting):
+                                errors.append(f"Строка {row_num}: неверный формат кода сортировки: {sorting}. Должен быть в формате: 001, 001.001, 001.002.001 и т.д.")
+                                continue
+                        
+                        # Если sorting не указан, генерируем автоматически на основе parent
+                        if not sorting and parent:
+                            sorting = Departments.get_next_sorting_code(parent=parent)
+                        elif not sorting:
+                            sorting = Departments.get_next_sorting_code(parent=None)
+                        
+                        # Создаем подразделение с обработкой ошибок валидации
+                        try:
+                            department = Departments(
+                                name=name,
+                                code=code,
+                                sorting=sorting,
+                                description=description,
+                                dep_short_name=dep_short_name,
+                                email=email if email else '',
+                                zipcode=zipcode,
+                                city=city,
+                                street=street,
+                                bldg=bldg,
+                                net_id=net_id,
+                                ip=ip if ip else None,
+                                mask=mask,
+                                parent=parent,
+                                is_logical=is_logical,
+                                is_active=is_active
+                            )
+                            department.full_clean()  # Валидация всех полей
+                            department.save()
+                            imported += 1
+                        except Exception as e:
+                            # Обработка ошибок валидации Django
+                            error_msg = str(e)
+                            if hasattr(e, 'error_dict'):
+                                error_details = []
+                                for field, field_errors in e.error_dict.items():
+                                    for err in field_errors:
+                                        error_details.append(f"{field}: {err.message}")
+                                error_msg = "; ".join(error_details)
+                            errors.append(f"Строка {row_num}: ошибка валидации - {error_msg}")
+                            continue
                         
                     except Exception as e:
                         errors.append(f"Строка {row_num}: ошибка при обработке - {str(e)}")
@@ -228,11 +328,11 @@ class DepartmentCSVTemplateView(LoginRequiredMixin, View):
         
         writer = csv.writer(response, delimiter=';')
         
-        writer.writerow(['Название', 'Код', 'Код сортировки', 'Описание', 'Родительское подразделение', 'Логическое', 'Активно'])
+        writer.writerow(['Название', 'Код', 'Код сортировки', 'Описание', 'Короткое наименование', 'Email', 'Почтовый индекс', 'Город', 'Улица', 'Здание', 'Идентификатор узла', 'IP адрес', 'Маска', 'Родительское подразделение', 'Логическое', 'Активно'])
         
-        writer.writerow(['Администрация', 'ADM001', 'ADM', 'Административное подразделение', '', 'False', 'True'])
-        writer.writerow(['Отдел продаж', 'SALES001', 'SALES', 'Отдел по работе с клиентами', 'Администрация', 'False', 'True'])
-        writer.writerow(['Отдел кадров', 'HR001', 'HR', 'Отдел управления персоналом', 'Администрация', 'False', 'True'])
+        writer.writerow(['Администрация', 'ADM001', '001', 'Административное подразделение', 'Админ', 'admin@company.ru', '123456', 'Москва', 'ул. Ленина', 'д. 1', 'ADM1', '192.168.1.0', '24', '', 'False', 'True'])
+        writer.writerow(['Отдел продаж', 'SALES001', '001.001', 'Отдел по работе с клиентами', 'Продажи', 'sales@company.ru', '123456', 'Москва', 'ул. Ленина', 'д. 1, оф. 201', 'SAL1', '192.168.2.0', '24', 'Администрация', 'False', 'True'])
+        writer.writerow(['Отдел кадров', 'HR001', '001.002', 'Отдел управления персоналом', 'Кадры', 'hr@company.ru', '123456', 'Москва', 'ул. Ленина', 'д. 1, оф. 301', 'HR01', '192.168.3.0', '24', 'Администрация', 'False', 'True'])
         
         return response
 
@@ -250,6 +350,7 @@ class PostnameListView(LoginRequiredMixin, ListView):
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |
+                Q(name_accusative__icontains=search) |
                 Q(code__icontains=search) |
                 Q(description__icontains=search) |
                 Q(category__icontains=search)
@@ -362,6 +463,7 @@ class PostnameCSVImportView(LoginRequiredMixin, View):
                         if has_header:
                             row = row_data
                             name = row.get('Название', '').strip()
+                            name_accusative = row.get('Название в винительном падеже', '').strip()
                             code = row.get('Код', '').strip()
                             sorting = row.get('Код сортировки', '').strip()
                             description = row.get('Описание', '').strip()
@@ -371,10 +473,11 @@ class PostnameCSVImportView(LoginRequiredMixin, View):
                                 errors.append(f"Строка {row_num}: недостаточно данных (нужно минимум 2 поля)")
                                 continue
                             name = row_data[0].strip() if len(row_data) > 0 else ''
-                            code = row_data[1].strip() if len(row_data) > 1 else ''
-                            sorting = row_data[2].strip() if len(row_data) > 2 else ''
-                            description = row_data[3].strip() if len(row_data) > 3 else ''
-                            category = row_data[4].strip() if len(row_data) > 4 else ''
+                            name_accusative = row_data[1].strip() if len(row_data) > 1 else ''
+                            code = row_data[2].strip() if len(row_data) > 2 else ''
+                            sorting = row_data[3].strip() if len(row_data) > 3 else ''
+                            description = row_data[4].strip() if len(row_data) > 4 else ''
+                            category = row_data[5].strip() if len(row_data) > 5 else ''
                         
                         # Валидация обязательных полей
                         if not name or not code:
@@ -389,6 +492,7 @@ class PostnameCSVImportView(LoginRequiredMixin, View):
                         # Создаем должность
                         Postname.objects.create(
                             name=name,
+                            name_accusative=name_accusative,
                             code=code,
                             sorting=sorting,
                             description=description,
@@ -436,10 +540,10 @@ class PostnameCSVTemplateView(LoginRequiredMixin, View):
         
         writer = csv.writer(response, delimiter=';')
         
-        writer.writerow(['Название', 'Код', 'Код сортировки', 'Описание', 'Категория'])
+        writer.writerow(['Название', 'Название в винительном падеже', 'Код', 'Код сортировки', 'Описание', 'Категория'])
         
-        writer.writerow(['Директор', 'DIR001', 'DIR', 'Руководитель организации', 'Руководящий состав'])
-        writer.writerow(['Бухгалтер', 'ACC001', 'ACC', 'Специалист по ведению учета', 'Финансовый отдел'])
+        writer.writerow(['Директор', 'Директора', 'DIR001', 'DIR', 'Руководитель организации', 'Руководящий состав'])
+        writer.writerow(['Бухгалтер', 'Бухгалтера', 'ACC001', 'ACC', 'Специалист по ведению учета', 'Финансовый отдел'])
         
         return response
 

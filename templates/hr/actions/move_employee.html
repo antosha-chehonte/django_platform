@@ -6,30 +6,160 @@
     <h3>Переместить сотрудника с позиции: {{ post.postname }} ({{ post.department }})</h3>
     <p class="text-muted">Текущий сотрудник: <strong>{{ post.employee }}</strong></p>
 
-    <form method="post" class="mt-3">
+    <form method="post" class="mt-3" id="moveEmployeeForm">
       {% csrf_token %}
+      
+      <div class="mb-3">
+        <label for="{{ form.department.id_for_label }}" class="form-label">{{ form.department.label }} <span class="text-danger">*</span></label>
+        {{ form.department }}
+        {% if form.department.errors %}
+          <div class="text-danger small">{{ form.department.errors }}</div>
+        {% endif %}
+      </div>
       
       <div class="mb-3">
         <label for="{{ form.target_post.id_for_label }}" class="form-label">{{ form.target_post.label }} <span class="text-danger">*</span></label>
         {{ form.target_post }}
         {% if form.target_post.errors %}
-          <div class="text-danger">{{ form.target_post.errors }}</div>
+          <div class="text-danger small">{{ form.target_post.errors }}</div>
         {% endif %}
+        <div id="posts-loading" class="text-muted small mt-1" style="display: none;">Загрузка позиций...</div>
+        <div id="posts-empty" class="text-warning small mt-1" style="display: none;">В выбранном подразделении нет вакантных позиций</div>
       </div>
       
       <div class="mb-3">
         <label for="{{ form.start_date.id_for_label }}" class="form-label">{{ form.start_date.label }} <span class="text-danger">*</span></label>
         {{ form.start_date }}
         {% if form.start_date.errors %}
-          <div class="text-danger">{{ form.start_date.errors }}</div>
+          <div class="text-danger small">{{ form.start_date.errors }}</div>
         {% endif %}
       </div>
       
       <div class="mt-3">
         <a class="btn btn-secondary" href="{% url 'hr:post_detail' post.pk %}">Отмена</a>
-        <button class="btn btn-warning" type="submit">Переместить</button>
+        <button class="btn btn-warning" type="submit" id="submit-btn" disabled>Переместить</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const departmentSelect = document.getElementById('id_department');
+    const targetPostSelect = document.getElementById('id_target_post');
+    const postsLoading = document.getElementById('posts-loading');
+    const postsEmpty = document.getElementById('posts-empty');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    function updatePostsList(departmentId, preserveSelectedValue) {
+        // Сохраняем текущее выбранное значение, если нужно
+        const currentValue = preserveSelectedValue ? targetPostSelect.value : null;
+        
+        if (!departmentId) {
+            targetPostSelect.innerHTML = '<option value="">Сначала выберите подразделение</option>';
+            targetPostSelect.disabled = true;
+            submitBtn.disabled = true;
+            postsLoading.style.display = 'none';
+            postsEmpty.style.display = 'none';
+            return;
+        }
+        
+        // Показываем индикатор загрузки
+        postsLoading.style.display = 'block';
+        postsEmpty.style.display = 'none';
+        targetPostSelect.disabled = true;
+        submitBtn.disabled = true;
+        
+        // Очищаем текущие опции
+        targetPostSelect.innerHTML = '<option value="">Загрузка...</option>';
+        
+        // Запрашиваем позиции через AJAX, исключая исходную позицию
+        const sourcePostId = '{{ post.pk }}';
+        const url = `{% url 'hr:get_vacant_posts' 0 %}`.replace('0', departmentId) + `?exclude_post_id=${sourcePostId}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                postsLoading.style.display = 'none';
+                
+                if (data.error) {
+                    targetPostSelect.innerHTML = `<option value="">Ошибка: ${data.error}</option>`;
+                    return;
+                }
+                
+                if (data.posts.length === 0) {
+                    targetPostSelect.innerHTML = '<option value="">Нет вакантных позиций</option>';
+                    postsEmpty.style.display = 'block';
+                    return;
+                }
+                
+                // Заполняем список позиций
+                targetPostSelect.innerHTML = '<option value="">Выберите позицию</option>';
+                data.posts.forEach(function(post) {
+                    const option = document.createElement('option');
+                    option.value = post.id;
+                    option.textContent = post.text;
+                    // Восстанавливаем выбранное значение, если оно было
+                    if (currentValue && post.id.toString() === currentValue.toString()) {
+                        option.selected = true;
+                    }
+                    targetPostSelect.appendChild(option);
+                });
+                
+                targetPostSelect.disabled = false;
+                updateSubmitButton();
+            })
+            .catch(error => {
+                postsLoading.style.display = 'none';
+                targetPostSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+                console.error('Error:', error);
+            });
+    }
+    
+    function updateSubmitButton() {
+        const departmentSelected = departmentSelect.value !== '';
+        const postSelected = targetPostSelect.value !== '' && !targetPostSelect.disabled;
+        submitBtn.disabled = !(departmentSelected && postSelected);
+    }
+    
+    // Обработчик изменения подразделения
+    departmentSelect.addEventListener('change', function() {
+        updatePostsList(this.value, false);
+    });
+    
+    // Обработчик изменения позиции
+    targetPostSelect.addEventListener('change', function() {
+        updateSubmitButton();
+    });
+    
+    // Инициализация при загрузке страницы
+    const initialDepartmentId = departmentSelect.value;
+    const initialPostValue = targetPostSelect.value;
+    const hasPostsLoaded = targetPostSelect.options.length > 1; // Есть ли уже загруженные позиции
+    
+    if (initialDepartmentId) {
+        if (hasPostsLoaded && initialPostValue) {
+            // Позиции уже загружены сервером (при ошибке валидации)
+            // и позиция уже выбрана - просто активируем поле и кнопку
+            targetPostSelect.disabled = false;
+            updateSubmitButton();
+        } else if (hasPostsLoaded && !initialPostValue) {
+            // Позиции загружены, но позиция не выбрана - просто активируем поле
+            targetPostSelect.disabled = false;
+            updateSubmitButton();
+        } else {
+            // Позиции не загружены - загружаем через AJAX
+            updatePostsList(initialDepartmentId, false);
+        }
+    } else {
+        // Если подразделение не выбрано, деактивируем поле позиции
+        if (!hasPostsLoaded) {
+            updatePostsList(null, false);
+        } else {
+            // Если позиции загружены, но подразделение не выбрано - деактивируем
+            targetPostSelect.disabled = true;
+            submitBtn.disabled = true;
+        }
+    }
+});
+</script>
 {% endblock hr_content %}

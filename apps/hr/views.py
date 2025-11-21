@@ -7,7 +7,7 @@ from django.views.generic import ListView, DetailView, View, CreateView, UpdateV
 from django.http import HttpResponse
 
 from .models import Posts, Employees, PositionHistory
-from .forms import HireNewEmployeeForm, AssignExistingEmployeeForm, MoveEmployeeForm, PostsForm, CSVImportForm, PostsCSVImportForm
+from .forms import HireNewEmployeeForm, AssignExistingEmployeeForm, MoveEmployeeForm, FreePositionForm, PostsForm, CSVImportForm, PostsCSVImportForm
 from apps.reference.models import Postname, Departments
 import csv
 from datetime import datetime
@@ -94,13 +94,13 @@ class AssignExistingEmployeeView(LoginRequiredMixin, View):
 
 class MoveEmployeeView(LoginRequiredMixin, View):
     def get(self, request, pk):
-        post = get_object_or_404(Posts, pk=pk)
-        form = MoveEmployeeForm()
-        return render(request, 'hr/actions/move_employee.html', {'form': form, 'post': post})
+        source_post = get_object_or_404(Posts, pk=pk)
+        form = MoveEmployeeForm(source_post=source_post)
+        return render(request, 'hr/actions/move_employee.html', {'form': form, 'post': source_post})
 
     def post(self, request, pk):
         source_post = get_object_or_404(Posts, pk=pk)
-        form = MoveEmployeeForm(request.POST)
+        form = MoveEmployeeForm(request.POST, source_post=source_post)
         if form.is_valid():
             target_post = form.cleaned_data['target_post']
             start_date = form.cleaned_data['start_date']
@@ -109,6 +109,11 @@ class MoveEmployeeView(LoginRequiredMixin, View):
             if not employee:
                 messages.error(request, 'На исходной позиции нет сотрудника.')
                 return redirect('hr:post_detail', pk=source_post.pk)
+
+            # Проверяем, что целевая позиция не является исходной
+            if target_post.pk == source_post.pk:
+                messages.error(request, 'Нельзя переместить сотрудника на ту же позицию.')
+                return render(request, 'hr/actions/move_employee.html', {'form': form, 'post': source_post})
 
             # закрываем историю по source
             PositionHistory.objects.filter(employee=employee, post=source_post, end_date__isnull=True).update(end_date=start_date)
@@ -135,7 +140,45 @@ class MoveEmployeeView(LoginRequiredMixin, View):
         return render(request, 'hr/actions/move_employee.html', {'form': form, 'post': source_post})
 
 
+class GetVacantPostsView(LoginRequiredMixin, View):
+    """AJAX endpoint для получения вакантных позиций по подразделению"""
+    def get(self, request, department_id):
+        from django.http import JsonResponse
+        from apps.reference.models import Departments
+        
+        try:
+            department = Departments.objects.get(pk=department_id, is_active=True)
+            vacant_posts = Posts.objects.filter(
+                department=department,
+                status=Posts.STATUS_VACANT,
+                is_active=True
+            ).select_related('postname').order_by('postname__name')
+            
+            posts_data = [
+                {
+                    'id': post.pk,
+                    'text': f"{post.postname.name} ({post.postname.code})"
+                }
+                for post in vacant_posts
+            ]
+            
+            return JsonResponse({'posts': posts_data})
+        except Departments.DoesNotExist:
+            return JsonResponse({'posts': [], 'error': 'Подразделение не найдено'}, status=404)
+        except Exception as e:
+            return JsonResponse({'posts': [], 'error': str(e)}, status=500)
+
+
 class FreePositionView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        post = get_object_or_404(Posts, pk=pk)
+        employee = post.employee
+        if not employee:
+            messages.info(request, 'Позиция уже вакантна.')
+            return redirect('hr:post_detail', pk=pk)
+        form = FreePositionForm()
+        return render(request, 'hr/actions/free_position.html', {'form': form, 'post': post})
+
     def post(self, request, pk):
         post = get_object_or_404(Posts, pk=pk)
         employee = post.employee
@@ -143,27 +186,32 @@ class FreePositionView(LoginRequiredMixin, View):
             messages.info(request, 'Позиция уже вакантна.')
             return redirect('hr:post_detail', pk=pk)
 
-        # прекращаем активную запись history
-        PositionHistory.objects.filter(employee=employee, post=post, end_date__isnull=True).update(end_date=request.POST.get('end_date'))
+        form = FreePositionForm(request.POST)
+        if form.is_valid():
+            end_date = form.cleaned_data['end_date']
 
-        # увольняем: позицию освобождаем, сотрудника делаем неактивным
-        post.employee = None
-        post.status = Posts.STATUS_VACANT
-        post.save()
+            # прекращаем активную запись history
+            PositionHistory.objects.filter(employee=employee, post=post, end_date__isnull=True).update(end_date=end_date)
 
-        employee.is_active = False
-        employee.save(update_fields=['is_active'])
+            # увольняем: позицию освобождаем, сотрудника делаем неактивным
+            post.employee = None
+            post.status = Posts.STATUS_VACANT
+            post.save()
 
-        PositionHistory.objects.create(
-            employee=employee,
-            post=post,
-            action=PositionHistory.ACTION_DISMISS,
-            start_date=request.POST.get('end_date'),
-            end_date=request.POST.get('end_date'),
-        )
+            employee.is_active = False
+            employee.save(update_fields=['is_active'])
 
-        messages.success(request, 'Позиция освобождена, сотрудник уволен.')
-        return redirect('hr:post_detail', pk=pk)
+            PositionHistory.objects.create(
+                employee=employee,
+                post=post,
+                action=PositionHistory.ACTION_DISMISS,
+                start_date=end_date,
+                end_date=end_date,
+            )
+
+            messages.success(request, 'Позиция освобождена, сотрудник уволен.')
+            return redirect('hr:post_detail', pk=pk)
+        return render(request, 'hr/actions/free_position.html', {'form': form, 'post': post})
 
 
 class EmployeesListView(LoginRequiredMixin, ListView):
@@ -267,10 +315,12 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                             last_name = row.get('Фамилия', '').strip()
                             first_name = row.get('Имя', '').strip()
                             middle_name = row.get('Отчество', '').strip()
+                            full_name_accusative = row.get('ФИО в винительном падеже', '').strip()
                             birth_date_str = row.get('Дата рождения', '').strip()
                             gender = row.get('Пол', '').strip().upper()
                             work_phone = row.get('Рабочий телефон', row.get('Телефон', '')).strip()  # Поддержка старого названия
                             mobile_phone = row.get('Мобильный телефон', '').strip()
+                            ip_phone = row.get('IP-телефон', row.get('IP телефон', '')).strip()
                             email = row.get('Email', '').strip()
                             appointment_date_str = row.get('Дата назначения', '').strip()
                             appointment_order_date_str = row.get('Дата приказа', '').strip()
@@ -280,17 +330,47 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                             if len(row_data) < 4:
                                 errors.append(f"Строка {row_num}: недостаточно данных (нужно минимум 4 поля)")
                                 continue
+                            
+                            # Определяем формат: новый (с ФИО в винительном падеже и IP-телефоном) или старый
+                            # Проверяем поле 3: если это дата (содержит дефисы и цифры), то старый формат
+                            field3 = row_data[3].strip() if len(row_data) > 3 else ''
+                            is_old_format = False
+                            if field3:
+                                # Проверяем, похоже ли поле 3 на дату (формат YYYY-MM-DD)
+                                try:
+                                    datetime.strptime(field3, '%Y-%m-%d')
+                                    is_old_format = True
+                                except ValueError:
+                                    pass  # Не дата, значит новый формат
+                            
                             last_name = row_data[0].strip() if len(row_data) > 0 else ''
                             first_name = row_data[1].strip() if len(row_data) > 1 else ''
                             middle_name = row_data[2].strip() if len(row_data) > 2 else ''
-                            birth_date_str = row_data[3].strip() if len(row_data) > 3 else ''
-                            gender = (row_data[4].strip().upper() if len(row_data) > 4 else '')
-                            work_phone = row_data[5].strip() if len(row_data) > 5 else ''
-                            mobile_phone = row_data[6].strip() if len(row_data) > 6 else ''
-                            email = row_data[7].strip() if len(row_data) > 7 else ''
-                            appointment_date_str = row_data[8].strip() if len(row_data) > 8 else ''
-                            appointment_order_date_str = row_data[9].strip() if len(row_data) > 9 else ''
-                            appointment_order_number = row_data[10].strip() if len(row_data) > 10 else ''
+                            
+                            if is_old_format:
+                                # Старый формат: Фамилия;Имя;Отчество;Дата рождения;Пол;Рабочий телефон;Мобильный телефон;Email;Дата назначения;Дата приказа;Номер приказа
+                                full_name_accusative = ''
+                                birth_date_str = row_data[3].strip() if len(row_data) > 3 else ''
+                                gender = (row_data[4].strip().upper() if len(row_data) > 4 else '')
+                                work_phone = row_data[5].strip() if len(row_data) > 5 else ''
+                                mobile_phone = row_data[6].strip() if len(row_data) > 6 else ''
+                                ip_phone = ''
+                                email = row_data[7].strip() if len(row_data) > 7 else ''
+                                appointment_date_str = row_data[8].strip() if len(row_data) > 8 else ''
+                                appointment_order_date_str = row_data[9].strip() if len(row_data) > 9 else ''
+                                appointment_order_number = row_data[10].strip() if len(row_data) > 10 else ''
+                            else:
+                                # Новый формат: Фамилия;Имя;Отчество;ФИО в винительном падеже;Дата рождения;Пол;Рабочий телефон;Мобильный телефон;IP-телефон;Email;Дата назначения;Дата приказа;Номер приказа
+                                full_name_accusative = row_data[3].strip() if len(row_data) > 3 else ''
+                                birth_date_str = row_data[4].strip() if len(row_data) > 4 else ''
+                                gender = (row_data[5].strip().upper() if len(row_data) > 5 else '')
+                                work_phone = row_data[6].strip() if len(row_data) > 6 else ''
+                                mobile_phone = row_data[7].strip() if len(row_data) > 7 else ''
+                                ip_phone = row_data[8].strip() if len(row_data) > 8 else ''
+                                email = row_data[9].strip() if len(row_data) > 9 else ''
+                                appointment_date_str = row_data[10].strip() if len(row_data) > 10 else ''
+                                appointment_order_date_str = row_data[11].strip() if len(row_data) > 11 else ''
+                                appointment_order_number = row_data[12].strip() if len(row_data) > 12 else ''
                         
                         # Валидация обязательных полей
                         if not last_name or not first_name:
@@ -336,10 +416,12 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                             last_name=last_name,
                             first_name=first_name,
                             middle_name=middle_name,
+                            full_name_accusative=full_name_accusative if full_name_accusative else '',
                             birth_date=birth_date,
                             gender=gender,
                             work_phone=work_phone if work_phone else '',
                             mobile_phone=mobile_phone if mobile_phone else '',
+                            ip_phone=ip_phone if ip_phone else '',
                             email=email if email else '',
                             appointment_date=appointment_date,
                             appointment_order_date=appointment_order_date,
@@ -391,11 +473,11 @@ class EmployeeCSVTemplateView(LoginRequiredMixin, View):
         writer = csv.writer(response, delimiter=';')
         
         # Записываем заголовки
-        writer.writerow(['Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Пол', 'Рабочий телефон', 'Мобильный телефон', 'Email', 'Дата назначения', 'Дата приказа', 'Номер приказа'])
+        writer.writerow(['Фамилия', 'Имя', 'Отчество', 'ФИО в винительном падеже', 'Дата рождения', 'Пол', 'Рабочий телефон', 'Мобильный телефон', 'IP-телефон', 'Email', 'Дата назначения', 'Дата приказа', 'Номер приказа'])
         
         # Добавляем пример данных
-        writer.writerow(['Иванов', 'Иван', 'Иванович', '1990-05-15', 'M', '+74951234567', '+79001234567', 'ivanov@example.com', '2024-01-15', '2024-01-10', '123-ОД'])
-        writer.writerow(['Петрова', 'Мария', 'Сергеевна', '1985-03-20', 'F', '+74959876543', '+79009876543', 'petrova@example.com', '2024-02-01', '2024-01-25', '45-ОД'])
+        writer.writerow(['Иванов', 'Иван', 'Иванович', 'Иванова Ивана Ивановича', '1990-05-15', 'M', '+74951234567', '+79001234567', '022010066', 'ivanov@example.com', '2024-01-15', '2024-01-10', '123-ОД'])
+        writer.writerow(['Петрова', 'Мария', 'Сергеевна', 'Петрову Марию Сергеевну', '1985-03-20', 'F', '+74959876543', '+79009876543', '022010067', 'petrova@example.com', '2024-02-01', '2024-01-25', '45-ОД'])
         
         return response
 

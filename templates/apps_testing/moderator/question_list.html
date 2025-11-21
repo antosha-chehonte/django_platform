@@ -22,7 +22,7 @@
                     <tr>
                         <th style="width: 50%;">Текст вопроса</th>
                         <th>Правильный ответ</th>
-                        <th class="text-end">Действия</th>
+                        <th class="text-end" style="width: 120px;">Действия</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,11 +32,13 @@
                         <td>
                             {% if question.correct_option == 1 %}{{ question.option_1 }}{% elif question.correct_option == 2 %}{{ question.option_2 }}{% elif question.correct_option == 3 %}{{ question.option_3 }}{% elif question.correct_option == 4 %}{{ question.option_4 }}{% endif %}
                         </td>
-                        <td class="text-end">
-                            <div class="d-grid gap-2">
-                            <a href="{% url 'moderator:question_update' question.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                            <a href="{% url 'moderator:question_delete' question.pk %}" class="btn btn-sm btn-danger">Удалить</a>
-                            </div>
+                        <td class="text-end text-nowrap">
+                            <a href="{% url 'moderator:question_update' question.pk %}" class="btn btn-sm btn-outline-warning me-1" title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'moderator:question_delete' question.pk %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

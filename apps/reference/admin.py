@@ -25,7 +25,7 @@ class DepartmentsAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Иерархия', {
-            'fields': ('parent',)
+            'fields': ('parent', 'sorting')
         }),
         ('Статус', {
             'fields': ('is_active', 'is_logical')
@@ -47,7 +47,29 @@ class DepartmentsAdmin(admin.ModelAdmin):
             if Posts.objects.filter(department=obj).exists():
                 messages.error(request, _('Нельзя деактивировать подразделение: существуют связанные позиции.'))
                 return
+        
+        # Сохраняем старый parent для проверки изменений
+        old_parent = None
+        if change and obj.pk:
+            try:
+                old_instance = Departments.objects.get(pk=obj.pk)
+                old_parent = old_instance.parent
+            except Departments.DoesNotExist:
+                pass
+        
+        # Если sorting не заполнен, генерируем автоматически
+        if not obj.sorting:
+            obj.sorting = Departments.get_next_sorting_code(parent=obj.parent, exclude_pk=obj.pk)
+        
+        # Если parent изменился, обновляем sorting
+        if old_parent != obj.parent:
+            obj.sorting = Departments.get_next_sorting_code(parent=obj.parent, exclude_pk=obj.pk)
+        
         super().save_model(request, obj, form, change)
+        
+        # Обновляем дочерние элементы после сохранения, если parent изменился
+        if old_parent != obj.parent:
+            obj.update_children_sorting()
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -61,11 +83,11 @@ class DepartmentsAdmin(admin.ModelAdmin):
 class PostnameAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'category', 'is_active', 'created_at')
     list_filter = ('is_active', 'category', 'created_at')
-    search_fields = ('name', 'code', 'description', 'category')
+    search_fields = ('name', 'name_accusative', 'code', 'description', 'category')
     list_editable = ('is_active',)
     fieldsets = (
         ('Основная информация', {
-            'fields': ('code', 'name', 'description')
+            'fields': ('code', 'name', 'name_accusative', 'description')
         }),
         ('Категория', {
             'fields': ('category',)

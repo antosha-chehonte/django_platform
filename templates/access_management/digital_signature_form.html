@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h3>{% if object %}Редактирование{% else %}Создание{% endif %} цифровой подписи</h3>
+
+{% if not object %}
+<div class="alert alert-success mb-4">
+    <h5 class="alert-heading">✨ Автоматическое заполнение из файла сертификата</h5>
+    <p class="mb-0">
+        Вы можете загрузить файл сертификата (.cer или .pfx) и система автоматически извлечет из него:
+    </p>
+    <ul class="mb-0 mt-2">
+        <li>Серийный номер сертификата</li>
+        <li>Отпечаток (SHA-1 fingerprint)</li>
+        <li>Дату окончания действия</li>
+    </ul>
+    <p class="mb-0 mt-2">
+        <strong>Просто загрузите файл ниже и нажмите "Сохранить"</strong> - поля заполнятся автоматически!
+    </p>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="{{ form.employee.id_for_label }}" class="form-label">
+                    {{ form.employee.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.employee }}
+                {% if form.employee.errors %}
+                    <div class="text-danger">{{ form.employee.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.certificate_type.id_for_label }}" class="form-label">
+                    {{ form.certificate_type.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.certificate_type }}
+                {% if form.certificate_type.errors %}
+                    <div class="text-danger">{{ form.certificate_type.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.certificate_serial.id_for_label }}" class="form-label">
+                    {{ form.certificate_serial.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.certificate_serial }}
+                {% if form.certificate_serial.errors %}
+                    <div class="text-danger">{{ form.certificate_serial.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.certificate_alias.id_for_label }}" class="form-label">
+                    {{ form.certificate_alias.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.certificate_alias }}
+                {% if form.certificate_alias.errors %}
+                    <div class="text-danger">{{ form.certificate_alias.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.expiry_date.id_for_label }}" class="form-label">
+                    {{ form.expiry_date.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.expiry_date }}
+                {% if form.expiry_date.errors %}
+                    <div class="text-danger">{{ form.expiry_date.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.carrier_serial.id_for_label }}" class="form-label">
+                    {{ form.carrier_serial.label }}
+                </label>
+                {{ form.carrier_serial }}
+                {% if form.carrier_serial.errors %}
+                    <div class="text-danger">{{ form.carrier_serial.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.certificate_file.id_for_label }}" class="form-label">
+                    {{ form.certificate_file.label }}
+                </label>
+                {{ form.certificate_file }}
+                {% if form.certificate_file.errors %}
+                    <div class="text-danger">{{ form.certificate_file.errors }}</div>
+                {% endif %}
+                {% if form.certificate_file.help_text %}
+                    <div class="form-text">{{ form.certificate_file.help_text }}</div>
+                {% endif %}
+            </div>
+            
+            {% if form.auto_fill_from_certificate %}
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.auto_fill_from_certificate }}
+                    <label class="form-check-label" for="{{ form.auto_fill_from_certificate.id_for_label }}">
+                        {{ form.auto_fill_from_certificate.label }}
+                    </label>
+                    {% if form.auto_fill_from_certificate.help_text %}
+                        <div class="form-text">{{ form.auto_fill_from_certificate.help_text }}</div>
+                    {% endif %}
+                </div>
+                <div class="alert alert-info mt-2">
+                    <strong>💡 Подсказка:</strong> При загрузке файла сертификата (.cer или .pfx) поля 
+                    <strong>Серийный номер</strong>, <strong>Отпечаток</strong> и <strong>Дата окончания</strong> 
+                    будут автоматически заполнены данными из файла. Статус также будет определен автоматически.
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <label for="{{ form.status.id_for_label }}" class="form-label">
+                    {{ form.status.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                    {{ form.notes.label }}
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger">{{ form.notes.errors }}</div>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'access:digital_signature_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </div>
+</form>
+
+{% if not object %}
+<script>
+// Автоматическое заполнение полей при загрузке файла сертификата
+document.addEventListener('DOMContentLoaded', function() {
+    const certificateFileInput = document.getElementById('{{ form.certificate_file.id_for_label }}');
+    const autoFillCheckbox = document.getElementById('{{ form.auto_fill_from_certificate.id_for_label }}');
+    
+    if (certificateFileInput && autoFillCheckbox && autoFillCheckbox.checked) {
+        certificateFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && (file.name.toLowerCase().endsWith('.cer') || file.name.toLowerCase().endsWith('.pfx'))) {
+                // Показываем индикатор загрузки
+                const loadingAlert = document.createElement('div');
+                loadingAlert.className = 'alert alert-info mt-2';
+                loadingAlert.id = 'cert-parsing-loading';
+                loadingAlert.innerHTML = '<strong>⏳ Обработка файла сертификата...</strong>';
+                certificateFileInput.parentElement.appendChild(loadingAlert);
+                
+                // Отправляем файл на сервер для парсинга
+                const formData = new FormData();
+                formData.append('certificate_file', file);
+                
+                // Получаем CSRF токен
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                const csrftoken = getCookie('csrftoken');
+                
+                fetch('{% url "access:certificate_parse_ajax" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingAlert.remove();
+                    
+                    if (data.success) {
+                        // Заполняем поля
+                        const serialInput = document.getElementById('{{ form.certificate_serial.id_for_label }}');
+                        const aliasInput = document.getElementById('{{ form.certificate_alias.id_for_label }}');
+                        const expiryInput = document.getElementById('{{ form.expiry_date.id_for_label }}');
+                        const statusSelect = document.getElementById('{{ form.status.id_for_label }}');
+                        
+                        if (serialInput && !serialInput.value) {
+                            serialInput.value = data.data.certificate_serial;
+                            serialInput.classList.add('border-success');
+                        }
+                        
+                        if (aliasInput && !aliasInput.value) {
+                            aliasInput.value = data.data.certificate_alias;
+                            aliasInput.classList.add('border-success');
+                        }
+                        
+                        if (expiryInput && !expiryInput.value) {
+                            expiryInput.value = data.data.expiry_date;
+                            expiryInput.classList.add('border-success');
+                        }
+                        
+                        // Устанавливаем статус всегда при загрузке файла
+                        if (statusSelect) {
+                            statusSelect.value = data.data.status;
+                            statusSelect.classList.add('border-success');
+                        }
+                        
+                        // Показываем сообщение об успехе
+                        const successAlert = document.createElement('div');
+                        successAlert.className = 'alert alert-success mt-2';
+                        successAlert.innerHTML = '<strong>✅ Успешно!</strong> Поля автоматически заполнены данными из сертификата.';
+                        certificateFileInput.parentElement.appendChild(successAlert);
+                        
+                        // Удаляем сообщение через 5 секунд
+                        setTimeout(() => successAlert.remove(), 5000);
+                        
+                        // Убираем зеленую рамку через 3 секунды
+                        setTimeout(() => {
+                            [serialInput, aliasInput, expiryInput, statusSelect].forEach(input => {
+                                if (input) input.classList.remove('border-success');
+                            });
+                        }, 3000);
+                    } else {
+                        // Показываем ошибку
+                        const errorAlert = document.createElement('div');
+                        errorAlert.className = 'alert alert-warning mt-2';
+                        errorAlert.innerHTML = '<strong>⚠️ Предупреждение:</strong> ' + data.error + ' Заполните поля вручную.';
+                        certificateFileInput.parentElement.appendChild(errorAlert);
+                    }
+                })
+                .catch(error => {
+                    loadingAlert.remove();
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'alert alert-danger mt-2';
+                    errorAlert.innerHTML = '<strong>❌ Ошибка:</strong> Не удалось обработать файл. ' + error.message;
+                    certificateFileInput.parentElement.appendChild(errorAlert);
+                });
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
+

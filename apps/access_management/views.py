@@ -4,13 +4,15 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.db.models import Q
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from django.utils import timezone
-from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import SystemAccess, DigitalSignature
 from .forms import SystemAccessForm, DigitalSignatureForm
 from apps.hr.models import Employees
 from apps.reference.models import CertificateType
+from .utils.certificate_parser import parse_certificate_from_django_file, CertificateParseError
 
 
 def access_home(request):
@@ -138,11 +140,6 @@ class DigitalSignatureListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = DigitalSignature.objects.select_related('employee', 'certificate_type').all()
         
-        # Фильтр по сотруднику
-        employee_id = self.request.GET.get('employee')
-        if employee_id:
-            queryset = queryset.filter(employee_id=employee_id)
-        
         # Фильтр по статусу
         status = self.request.GET.get('status')
         if status:
@@ -153,15 +150,14 @@ class DigitalSignatureListView(LoginRequiredMixin, ListView):
         if cert_type_id:
             queryset = queryset.filter(certificate_type_id=cert_type_id)
         
-        # Фильтр по истекающим срокам (в течение 40 дней)
-        expiring = self.request.GET.get('expiring')
-        if expiring == 'true':
-            today = timezone.now().date()
-            future_date = today + timedelta(days=40)
-            queryset = queryset.filter(
-                expiry_date__gte=today,
-                expiry_date__lte=future_date
-            )
+        # Фильтр по диапазону даты окончания
+        expiry_date_from = self.request.GET.get('expiry_date_from')
+        if expiry_date_from:
+            queryset = queryset.filter(expiry_date__gte=expiry_date_from)
+        
+        expiry_date_to = self.request.GET.get('expiry_date_to')
+        if expiry_date_to:
+            queryset = queryset.filter(expiry_date__lte=expiry_date_to)
         
         # Поиск
         search = self.request.GET.get('search')
@@ -180,11 +176,10 @@ class DigitalSignatureListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search'] = self.request.GET.get('search', '')
-        context['employee_filter'] = self.request.GET.get('employee', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['cert_type_filter'] = self.request.GET.get('cert_type', '')
-        context['expiring_filter'] = self.request.GET.get('expiring', '')
-        context['employees'] = Employees.objects.filter(is_active=True).order_by('last_name', 'first_name')
+        context['expiry_date_from'] = self.request.GET.get('expiry_date_from', '')
+        context['expiry_date_to'] = self.request.GET.get('expiry_date_to', '')
         context['cert_types'] = CertificateType.objects.filter(is_active=True).order_by('name')
         context['status_choices'] = DigitalSignature.STATUS_CHOICES
         return context
@@ -260,6 +255,63 @@ class DigitalSignatureDownloadView(LoginRequiredMixin, View):
         else:
             messages.error(request, 'Файл сертификата не найден.')
             return redirect('access:digital_signature_detail', pk=pk)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertificateParseAjaxView(LoginRequiredMixin, View):
+    """AJAX endpoint для парсинга сертификата без сохранения"""
+    
+    def post(self, request):
+        """Парсит загруженный файл сертификата и возвращает данные в JSON"""
+        if 'certificate_file' not in request.FILES:
+            return JsonResponse({
+                'success': False,
+                'error': 'Файл не предоставлен'
+            }, status=400)
+        
+        try:
+            certificate_file = request.FILES['certificate_file']
+            cert_data = parse_certificate_from_django_file(certificate_file)
+            
+            # Определяем статус (логика совпадает с формой)
+            today = timezone.now().date()
+            expiry_date = cert_data['expiry_date']
+            days_until_expiry = (expiry_date - today).days
+            
+            if expiry_date < today:
+                # Сертификат уже истек
+                status = DigitalSignature.STATUS_NEEDS_UPDATE
+            elif days_until_expiry <= 30:
+                # Сертификат истекает в течение месяца
+                status = DigitalSignature.STATUS_NEEDS_UPDATE
+            else:
+                # Сертификат действителен
+                status = DigitalSignature.STATUS_ACTIVE
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'certificate_serial': cert_data['certificate_serial'],
+                    'certificate_alias': cert_data['certificate_alias'],
+                    'expiry_date': cert_data['expiry_date'].strftime('%Y-%m-%d'),
+                    'status': status,
+                    'subject_name': cert_data.get('subject_name', ''),
+                    'issuer_name': cert_data.get('issuer_name', ''),
+                    'valid_from': cert_data.get('valid_from').strftime('%Y-%m-%d') if cert_data.get('valid_from') else '',
+                }
+            })
+        
+        except CertificateParseError as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+        
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Ошибка при обработке файла: {str(e)}'
+            }, status=500)
 
 
 

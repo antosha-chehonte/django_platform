@@ -6,16 +6,16 @@ from .models import Employees, Posts, PositionHistory
 
 @admin.register(Employees)
 class EmployeesAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'middle_name', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'is_active')
+    list_display = ('last_name', 'first_name', 'middle_name', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'ip_phone', 'is_active')
     list_filter = ('is_active', 'gender')
-    search_fields = ('last_name', 'first_name', 'middle_name', 'email', 'work_phone', 'mobile_phone')
+    search_fields = ('last_name', 'first_name', 'middle_name', 'email', 'work_phone', 'mobile_phone', 'ip_phone', 'full_name_accusative')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('Основная информация', {
-            'fields': ('last_name', 'first_name', 'middle_name', 'birth_date', 'gender')
+            'fields': ('last_name', 'first_name', 'middle_name', 'full_name_accusative', 'birth_date', 'gender')
         }),
         ('Контакты', {
-            'fields': ('work_phone', 'mobile_phone', 'email')
+            'fields': ('work_phone', 'mobile_phone', 'ip_phone', 'email')
         }),
         ('Назначение', {
             'fields': ('appointment_date', 'appointment_order_date', 'appointment_order_number')

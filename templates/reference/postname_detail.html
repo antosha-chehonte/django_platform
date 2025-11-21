@@ -14,6 +14,11 @@
             <dt class="col-sm-3">Название:</dt>
             <dd class="col-sm-9">{{ postname.name }}</dd>
             
+            {% if postname.name_accusative %}
+            <dt class="col-sm-3">Название в винительном падеже:</dt>
+            <dd class="col-sm-9">{{ postname.name_accusative }}</dd>
+            {% endif %}
+            
             {% if postname.category %}
             <dt class="col-sm-3">Категория:</dt>
             <dd class="col-sm-9"><span class="badge bg-info">{{ postname.category }}</span></dd>

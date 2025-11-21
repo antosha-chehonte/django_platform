@@ -29,11 +29,7 @@
     <a class="btn btn-primary" href="{% url 'hr:post_assign_existing' post.pk %}">Назначить из базы</a>
   {% else %}
     <a class="btn btn-warning" href="{% url 'hr:post_move' post.pk %}">Переместить</a>
-    <form method="post" action="{% url 'hr:post_free' post.pk %}" style="display:inline" onsubmit="return confirm('Освободить должность?');">
-      {% csrf_token %}
-      <input type="hidden" name="end_date" value="{{ today|default:None }}">
-      <button type="submit" class="btn btn-danger">Освободить должность</button>
-    </form>
+    <a class="btn btn-danger" href="{% url 'hr:post_free' post.pk %}">Освободить должность</a>
   {% endif %}
 </div>
 {% endblock hr_content %}

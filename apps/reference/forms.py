@@ -80,6 +80,48 @@ class DepartmentForm(forms.ModelForm):
         if mask is not None and (mask < 0 or mask > 32):
             raise forms.ValidationError('Маска подсети должна быть в диапазоне от 0 до 32')
         return mask
+    
+    def clean_sorting(self):
+        """Валидация sorting"""
+        sorting = self.cleaned_data.get('sorting', '').strip()
+        if sorting:
+            import re
+            if not re.match(r'^(\d{3})(\.\d{3})*$', sorting):
+                raise forms.ValidationError('Код сортировки должен быть в формате: 001, 001.001, 001.002.001 и т.д. (сегменты по 3 цифры, разделенные точкой)')
+        return sorting
+    
+    def save(self, commit=True):
+        """Переопределяем save для автоматической генерации sorting"""
+        instance = super().save(commit=False)
+        
+        # Сохраняем старый parent для проверки изменений
+        old_parent = None
+        if instance.pk:
+            try:
+                old_instance = Departments.objects.get(pk=instance.pk)
+                old_parent = old_instance.parent
+            except Departments.DoesNotExist:
+                pass
+        
+        # Если sorting не заполнен, генерируем автоматически
+        if not instance.sorting:
+            instance.sorting = Departments.get_next_sorting_code(parent=instance.parent, exclude_pk=instance.pk)
+        
+        # Если parent изменился, обновляем sorting и дочерние элементы
+        if old_parent != instance.parent:
+            # Генерируем новый sorting на основе нового parent
+            instance.sorting = Departments.get_next_sorting_code(parent=instance.parent, exclude_pk=instance.pk)
+            
+            if commit:
+                instance.save()
+                # Обновляем дочерние элементы после сохранения
+                instance.update_children_sorting()
+                return instance
+        
+        if commit:
+            instance.save()
+        
+        return instance
 
 
 class PostnameForm(forms.ModelForm):
@@ -87,9 +129,10 @@ class PostnameForm(forms.ModelForm):
     
     class Meta:
         model = Postname
-        fields = ['name', 'code', 'sorting', 'description', 'category', 'is_active']
+        fields = ['name', 'name_accusative', 'code', 'sorting', 'description', 'category', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'name_accusative': forms.TextInput(attrs={'class': 'form-control'}),
             'code': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
             'sorting': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -101,12 +144,13 @@ class PostnameForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['description'].required = False
         self.fields['category'].required = False
+        self.fields['name_accusative'].required = False
 
 
 class CSVImportPostnameForm(forms.Form):
     csv_file = forms.FileField(
         label='CSV файл',
-        help_text='Файл должен содержать колонки: Название;Код;Код сортировки;Описание;Категория',
+        help_text='Файл должен содержать колонки: Название;Название в винительном падеже;Код;Код сортировки;Описание;Категория',
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
     )
 
@@ -114,7 +158,7 @@ class CSVImportPostnameForm(forms.Form):
 class CSVImportDepartmentForm(forms.Form):
     csv_file = forms.FileField(
         label='CSV файл',
-        help_text='Файл должен содержать колонки: Название;Код;Код сортировки;Описание;Короткое наименование;Email;Почтовый индекс;Город;Улица;Здание;Идентификатор узла;IP адрес;Маска;Родительское подразделение;Логическое;Активно',
+        help_text='Файл должен содержать колонки: Название;Код;Код сортировки (формат: 001, 001.001, 001.002.001 - можно оставить пустым для автоматической генерации);Описание;Короткое наименование;Email;Почтовый индекс;Город;Улица;Здание;Идентификатор узла;IP адрес;Маска;Родительское подразделение;Логическое;Активно',
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
     )
 

@@ -47,7 +47,7 @@
                     <th>Должность</th>
                     <th>Статус</th>
                     <th>Сотрудник</th>
-                    <th></th>
+                    <th style="width: 120px;">Действия</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -62,10 +62,16 @@
                       {% endif %}
                     </td>
                     <td>{% if p.employee %}{{ p.employee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                    <td>
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'hr:post_detail' p.pk %}">Открыть</a>
-                      <a class="btn btn-sm btn-outline-warning" href="{% url 'hr:post_update' p.pk %}">Изменить</a>
-                      <a class="btn btn-sm btn-outline-danger" href="{% url 'hr:post_delete' p.pk %}">Удалить</a>
+                    <td class="text-nowrap">
+                      <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'hr:post_detail' p.pk %}" title="Открыть">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a class="btn btn-sm btn-outline-warning me-1" href="{% url 'hr:post_update' p.pk %}" title="Изменить">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a class="btn btn-sm btn-outline-danger" href="{% url 'hr:post_delete' p.pk %}" title="Удалить">
+                        <i class="bi bi-trash"></i>
+                      </a>
                     </td>
                   </tr>
                   {% endfor %}

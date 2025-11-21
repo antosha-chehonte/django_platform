@@ -13,11 +13,13 @@ class Employees(models.Model):
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     middle_name = models.CharField(max_length=150, blank=True, verbose_name='Отчество')
+    full_name_accusative = models.CharField(max_length=300, blank=True, verbose_name='ФИО в винительном падеже')
     birth_date = models.DateField(verbose_name='Дата рождения')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, verbose_name='Пол')
 
     work_phone = models.CharField(max_length=50, blank=True, verbose_name='Рабочий телефон')
     mobile_phone = models.CharField(max_length=50, blank=True, verbose_name='Мобильный телефон')
+    ip_phone = models.CharField(max_length=20, blank=True, verbose_name='IP-телефон')
     email = models.EmailField(blank=True, verbose_name='Email')
 
     appointment_date = models.DateField(null=True, blank=True, verbose_name='Дата назначения на должность')
@@ -92,7 +94,7 @@ class PositionHistory(models.Model):
         (ACTION_HIRE, 'Принят'),
         (ACTION_MOVE, 'Перемещен'),
         (ACTION_RETURN, 'Возвращен'),
-        (ACTION_DISMISS, 'Уволен'),
+        (ACTION_DISMISS, 'Освобожден'),
     )
 
     employee = models.ForeignKey(Employees, on_delete=models.CASCADE, verbose_name='Сотрудник')

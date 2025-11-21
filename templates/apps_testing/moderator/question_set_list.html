@@ -15,7 +15,7 @@
                 <tr>
                     <th>Название</th>
                     <th>Кол-во вопросов</th>
-                    <th>Действия</th>
+                    <th style="width: 150px;">Действия</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,10 +23,16 @@
                 <tr>
                     <td>{{ qset.title }}</td>
                     <td>{{ qset.questions.count }}</td>
-                    <td>
-                        <a href="{% url 'moderator:question_list' qset.pk %}" class="btn btn-sm btn-info">Вопросы</a>
-                        <a href="{% url 'moderator:qset_update' qset.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                        <a href="{% url 'moderator:qset_delete' qset.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    <td class="text-nowrap">
+                        <a href="{% url 'moderator:question_list' qset.pk %}" class="btn btn-sm btn-outline-info me-1" title="Вопросы">
+                            <i class="bi bi-question-circle"></i>
+                        </a>
+                        <a href="{% url 'moderator:qset_update' qset.pk %}" class="btn btn-sm btn-outline-warning me-1" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'moderator:qset_delete' qset.pk %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                            <i class="bi bi-trash"></i>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
