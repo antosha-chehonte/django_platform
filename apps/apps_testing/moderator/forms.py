@@ -1,7 +1,8 @@
 # apps_testing/moderator/forms.py
 from django import forms
 from django.utils import timezone
-from apps.apps_testing.tests.models import Test, QuestionSet, Question
+from apps.apps_testing.tests.models import Test, QuestionSet, Question, TestSession
+from apps.reference.models import Departments
 from django.contrib.auth.forms import AuthenticationForm
 
 
@@ -214,6 +215,22 @@ class ResultsFilterForm(forms.Form):
     participant = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Фамилия или имя'})
+    )
+    test = forms.ModelChoiceField(
+        queryset=Test.objects.all(),
+        required=False,
+        empty_label='Все тесты',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    ip_address = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'IP-адрес'})
+    )
+    department = forms.ModelChoiceField(
+        queryset=Departments.objects.all(),
+        required=False,
+        empty_label='Все подразделения',
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
 
     def clean(self):

@@ -12,6 +12,16 @@ from .forms import TestAccessForm, TestRegistrationForm
 from .utils import generate_test_questions, calculate_test_results
 
 
+def get_client_ip(request):
+    """Получение IP-адреса клиента из запроса."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
 def test_list(request):
     tests = Test.objects.filter(is_active=True)
     return render(request, 'apps_testing/tests/test_list.html', {'tests': tests})
@@ -62,7 +72,8 @@ def test_register(request, test_id):
                 department=data['department'],
                 postname=data['postname'],
                 session_key=session_key,
-                selected_questions={'order': question_ids}
+                selected_questions={'order': question_ids},
+                ip_address=get_client_ip(request)
             )
 
             # Сохраняем ID нашей сессии тестирования в сессию Django,
@@ -85,7 +96,12 @@ def test_start(request):
     if test_session.is_completed:
         return redirect('testing:test_result', session_key=test_session.session_key)
 
-    end_time = test_session.start_time + timedelta(minutes=test_session.test.time_limit)
+    # Вычисляем end_time с учетом того, что start_time может быть null
+    if test_session.start_time:
+        end_time = test_session.start_time + timedelta(minutes=test_session.test.time_limit)
+    else:
+        # Если start_time еще не установлен, используем текущее время + лимит
+        end_time = timezone.now() + timedelta(minutes=test_session.test.time_limit)
 
     context = {
         'session': test_session,
@@ -107,10 +123,12 @@ def get_session_and_check_time(request):
     if session.is_completed:
         return session, True  # Сессия завершена
 
-    time_limit = session.test.time_limit
-    if timezone.now() > session.start_time + timedelta(minutes=time_limit):
-        calculate_test_results(session)
-        return session, True  # Время вышло
+    # Проверяем время только если start_time установлен
+    if session.start_time:
+        time_limit = session.test.time_limit
+        if timezone.now() > session.start_time + timedelta(minutes=time_limit):
+            calculate_test_results(session)
+            return session, True  # Время вышло
 
     return session, False  # Тест продолжается
 
@@ -121,6 +139,15 @@ def get_question_ajax(request):
         return JsonResponse({'status': 'finished', 'result_url': reverse('testing:test_result', args=[session.session_key])})
 
     q_index = int(request.GET.get('index', 0))
+    
+    # Устанавливаем start_time при загрузке первого вопроса
+    if q_index == 0:
+        # Перезагружаем сессию из БД для проверки актуального состояния
+        session.refresh_from_db()
+        if not session.start_time:
+            session.start_time = timezone.now()
+            session.save(update_fields=['start_time'])
+    
     question_ids = session.selected_questions.get('order', [])
 
     if not (0 <= q_index < len(question_ids)):

@@ -33,9 +33,9 @@ class TestAdmin(admin.ModelAdmin):
 
 @admin.register(TestSession)
 class TestSessionAdmin(admin.ModelAdmin):
-    list_display = ("id", "test", "last_name", "first_name", "is_completed", "start_time", "end_time")
+    list_display = ("id", "test", "last_name", "first_name", "is_completed", "start_time", "end_time", "ip_address")
     list_filter = ("is_completed", "test")
-    search_fields = ("last_name", "first_name", "middle_name", "session_key")
+    search_fields = ("last_name", "first_name", "middle_name", "session_key", "ip_address")
 
 
 @admin.register(UserAnswer)

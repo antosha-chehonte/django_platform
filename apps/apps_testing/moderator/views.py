@@ -209,6 +209,9 @@ class ResultListView(ModeratorRequiredMixin, ListView):
             date_from = form.cleaned_data.get('date_from')
             date_to = form.cleaned_data.get('date_to')
             participant = form.cleaned_data.get('participant')
+            test = form.cleaned_data.get('test')
+            ip_address = form.cleaned_data.get('ip_address')
+            department = form.cleaned_data.get('department')
 
             if date_from:
                 queryset = queryset.filter(created_at__date__gte=date_from)
@@ -220,6 +223,12 @@ class ResultListView(ModeratorRequiredMixin, ListView):
                 ) | queryset.filter(
                     session__first_name__icontains=participant
                 )
+            if test:
+                queryset = queryset.filter(session__test=test)
+            if ip_address:
+                queryset = queryset.filter(session__ip_address__icontains=ip_address)
+            if department:
+                queryset = queryset.filter(session__department=department)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -272,10 +281,26 @@ class QuestionErrorAnalyticsView(ModeratorRequiredMixin, TemplateView):
             qset = form.cleaned_data['question_set']
             include_all_sets = form.cleaned_data.get('include_all_sets')
 
+            # Получаем все результаты (как в ResultListView)
+            # Это определяет, какие сессии имеют результаты и доступны в списке результатов
+            results_queryset = TestResult.objects.select_related('session', 'session__test')
+            
+            # Получаем ID всех сессий, которые имеют результаты
+            # Только ответы из этих сессий будут учитываться в аналитике
+            session_ids_with_results = list(results_queryset.values_list('session_id', flat=True))
+            
+            # Если нет сессий с результатами, возвращаем пустой список
+            if not session_ids_with_results:
+                context['form'] = form
+                context['rankings'] = []
+                return context
+
+            # Фильтруем ответы только из сессий, которые имеют результаты
             answers = UserAnswer.objects.filter(
                 answered_at__date__gte=start,
                 answered_at__date__lte=end,
                 is_correct=False,
+                session_id__in=session_ids_with_results,  # Фильтруем только сессии с результатами
             ).select_related('question', 'session__test', 'question__question_set')
 
             if test:

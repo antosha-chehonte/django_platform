@@ -30,6 +30,9 @@ def calculate_test_results(session: TestSession):
         # Результат уже был посчитан
         return session.result
 
+    # Перезагружаем сессию из базы данных, чтобы получить актуальный start_time
+    session.refresh_from_db()
+
     total_questions = len(session.selected_questions.get('order', []))
 
     # select_related для оптимизации
@@ -63,8 +66,28 @@ def calculate_test_results(session: TestSession):
         percentage=percentage
     )
 
+    # Устанавливаем start_time если он не был установлен
+    # Используем время первого ответа как fallback
+    end_time_now = timezone.now()
+    
+    if not session.start_time:
+        first_answer = session.answers.order_by('answered_at').first()
+        if first_answer and first_answer.answered_at:
+            # Используем время первого ответа
+            session.start_time = first_answer.answered_at
+        else:
+            # Если нет ответов, используем текущее время минус 1 минута
+            # чтобы гарантировать разумную разницу с end_time
+            from datetime import timedelta
+            session.start_time = end_time_now - timedelta(minutes=1)
+    
+    # Убеждаемся, что start_time раньше end_time (с запасом минимум 1 секунда)
+    if session.start_time >= end_time_now:
+        from datetime import timedelta
+        session.start_time = end_time_now - timedelta(seconds=1)
+    
     session.is_completed = True
-    session.end_time = timezone.now()
+    session.end_time = end_time_now
     session.save()
 
     return result

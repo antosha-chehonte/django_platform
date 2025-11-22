@@ -1,4 +1,5 @@
 {# templates/pdf/test_result_report.html #}
+{% load test_filters %}
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -35,7 +36,7 @@
             </tr>
             <tr>
                 <td>Время прохождения:</td>
-                <td>{{ result.session.end_time|timesince:result.session.start_time }}</td>
+                <td>{{ result.session.start_time|test_duration:result.session.end_time }}</td>
             </tr>
             </tbody>
         </table>

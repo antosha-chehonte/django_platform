@@ -65,10 +65,11 @@ class TestSession(models.Model):
     department = models.ForeignKey('reference.Departments', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Подразделение")
     postname = models.ForeignKey('reference.Postname', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Должность")
     session_key = models.CharField(max_length=40, unique=True, verbose_name="Ключ сессии")
-    start_time = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField(null=True, blank=True, verbose_name="Время начала")
     end_time = models.DateTimeField(null=True, blank=True)
     is_completed = models.BooleanField(default=False)
     selected_questions = models.JSONField(verbose_name="Список ID выбранных вопросов") # { 'order': [id1, id2, ...] }
+    ip_address = models.CharField(max_length=45, null=True, blank=True, verbose_name="IP-адрес")
 
     def get_full_name(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}".strip()
