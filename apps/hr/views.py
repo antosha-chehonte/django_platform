@@ -766,7 +766,7 @@ class PostCSVTemplateView(LoginRequiredMixin, View):
         try:
             dept = Departments.objects.filter(is_active=True).first()
             postname_obj = Postname.objects.filter(is_active=True).first()
-            employee = Employees.objects.filter(is_active=True).first()
+            employee = Employees.objects.filter(status=Employees.STATUS_ACTIVE).first()
             if dept and postname_obj and employee:
                 writer.writerow([
                     postname_obj.name,
