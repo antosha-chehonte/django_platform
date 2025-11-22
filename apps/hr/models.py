@@ -10,6 +10,15 @@ class Employees(models.Model):
         ('F', 'Женский'),
     )
 
+    STATUS_ACTIVE = 'active'
+    STATUS_DISMISSED = 'dismissed'
+    STATUS_TEMPORARY_ABSENCE = 'temporary_absence'
+    STATUS_CHOICES = (
+        (STATUS_ACTIVE, 'Активен'),
+        (STATUS_DISMISSED, 'Уволен'),
+        (STATUS_TEMPORARY_ABSENCE, 'Временно отсутствует'),
+    )
+
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     middle_name = models.CharField(max_length=150, blank=True, verbose_name='Отчество')
@@ -26,6 +35,7 @@ class Employees(models.Model):
     appointment_order_date = models.DateField(null=True, blank=True, verbose_name='Дата приказа о назначении')
     appointment_order_number = models.CharField(max_length=100, blank=True, verbose_name='Номер приказа о назначении')
 
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE, verbose_name='Статус')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -35,6 +45,16 @@ class Employees(models.Model):
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
         ordering = ['last_name', 'first_name', 'middle_name']
+
+    def save(self, *args, **kwargs):
+        # Синхронизируем is_active со статусом для обратной совместимости
+        self.is_active = (self.status == self.STATUS_ACTIVE)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_active_property(self):
+        """Вычисляемое свойство для обратной совместимости"""
+        return self.status == self.STATUS_ACTIVE
 
     def __str__(self) -> str:
         full = f"{self.last_name} {self.first_name} {self.middle_name}".strip()

@@ -33,10 +33,14 @@
                 <td>{{ emp.mobile_phone|default:"—" }}</td>
                 <td>{{ emp.email|default:"—" }}</td>
                 <td>
-                    {% if emp.is_active %}
-                        <span class="badge bg-success">Активен</span>
+                    {% if emp.status == 'active' %}
+                        <span class="badge bg-success">{{ emp.get_status_display }}</span>
+                    {% elif emp.status == 'dismissed' %}
+                        <span class="badge bg-danger">{{ emp.get_status_display }}</span>
+                    {% elif emp.status == 'temporary_absence' %}
+                        <span class="badge bg-warning">{{ emp.get_status_display }}</span>
                     {% else %}
-                        <span class="badge bg-secondary">Неактивен</span>
+                        <span class="badge bg-secondary">{{ emp.get_status_display }}</span>
                     {% endif %}
                 </td>
                 <td class="text-nowrap">

@@ -29,13 +29,16 @@ class HireNewEmployeeForm(forms.ModelForm):
 class AssignExistingEmployeeForm(forms.Form):
     employee = forms.ModelChoiceField(
         queryset=Employees.objects.none(),
-        label='Сотрудник (уволен)'
+        label='Сотрудник'
     )
     start_date = forms.DateField(label='Дата начала', widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['employee'].queryset = Employees.objects.filter(is_active=False)
+        # Показываем уволенных и временно отсутствующих сотрудников
+        self.fields['employee'].queryset = Employees.objects.filter(
+            status__in=[Employees.STATUS_DISMISSED, Employees.STATUS_TEMPORARY_ABSENCE]
+        ).order_by('last_name', 'first_name', 'middle_name')
         self.fields['employee'].widget.attrs.update({'class': 'form-select'})
 
 
@@ -102,6 +105,14 @@ class FreePositionForm(forms.Form):
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         required=True
     )
+    employee_status = forms.ChoiceField(
+        label='Статус сотрудника',
+        choices=Employees.STATUS_CHOICES,
+        initial=Employees.STATUS_DISMISSED,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True,
+        help_text='Выберите статус сотрудника после освобождения должности'
+    )
     
     def __init__(self, *args, **kwargs):
         from django.utils import timezone
@@ -114,7 +125,7 @@ class FreePositionForm(forms.Form):
 class EmployeesForm(forms.ModelForm):
     class Meta:
         model = Employees
-        fields = ['last_name', 'first_name', 'middle_name', 'full_name_accusative', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'ip_phone', 'email', 'appointment_date', 'appointment_order_date', 'appointment_order_number']
+        fields = ['last_name', 'first_name', 'middle_name', 'full_name_accusative', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'ip_phone', 'email', 'appointment_date', 'appointment_order_date', 'appointment_order_number', 'status']
         widgets = {
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -129,6 +140,7 @@ class EmployeesForm(forms.ModelForm):
             'appointment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'appointment_order_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'appointment_order_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
 
@@ -146,7 +158,7 @@ class PostsForm(forms.ModelForm):
 class CSVImportForm(forms.Form):
     csv_file = forms.FileField(
         label='CSV файл',
-        help_text='Файл должен содержать колонки: Фамилия;Имя;Отчество;ФИО в винительном падеже (опционально);Дата рождения (YYYY-MM-DD);Пол (M/F);Рабочий телефон;Мобильный телефон;IP-телефон (опционально);Email;Дата назначения (YYYY-MM-DD);Дата приказа (YYYY-MM-DD);Номер приказа',
+        help_text='Файл должен содержать колонки: Фамилия;Имя;Отчество;ФИО в винительном падеже (опционально);Дата рождения (YYYY-MM-DD);Пол (M/F);Рабочий телефон;Мобильный телефон;IP-телефон (опционально);Email;Дата назначения (YYYY-MM-DD);Дата приказа (YYYY-MM-DD);Номер приказа;Статус (опционально: active/dismissed/temporary_absence)',
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
     )
 

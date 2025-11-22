@@ -6,8 +6,8 @@ from .models import Employees, Posts, PositionHistory
 
 @admin.register(Employees)
 class EmployeesAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'middle_name', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'ip_phone', 'is_active')
-    list_filter = ('is_active', 'gender')
+    list_display = ('last_name', 'first_name', 'middle_name', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'ip_phone', 'status_badge', 'is_active')
+    list_filter = ('status', 'is_active', 'gender')
     search_fields = ('last_name', 'first_name', 'middle_name', 'email', 'work_phone', 'mobile_phone', 'ip_phone', 'full_name_accusative')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
@@ -21,13 +21,27 @@ class EmployeesAdmin(admin.ModelAdmin):
             'fields': ('appointment_date', 'appointment_order_date', 'appointment_order_number')
         }),
         ('Статус', {
-            'fields': ('is_active',)
+            'fields': ('status', 'is_active')
         }),
         ('Системная информация', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+
+    def status_badge(self, obj: Employees):
+        if obj.status == Employees.STATUS_ACTIVE:
+            color = '#198754'  # bootstrap success
+        elif obj.status == Employees.STATUS_DISMISSED:
+            color = '#dc3545'  # bootstrap danger
+        elif obj.status == Employees.STATUS_TEMPORARY_ABSENCE:
+            color = '#ffc107'  # bootstrap warning
+        else:
+            color = '#6c757d'  # bootstrap secondary
+        label = obj.get_status_display()
+        return format_html('<span style="padding:2px 8px;border-radius:12px;background:{};color:#fff;">{}</span>', color, label)
+
+    status_badge.short_description = 'Статус'
 
 
 @admin.register(Posts)

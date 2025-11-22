@@ -49,8 +49,8 @@ class HireNewEmployeeView(LoginRequiredMixin, View):
             post.full_clean()
             post.save()
             # обновляем статус сотрудника
-            employee.is_active = True
-            employee.save(update_fields=['is_active'])
+            employee.status = Employees.STATUS_ACTIVE
+            employee.save(update_fields=['status', 'is_active'])
             # история
             PositionHistory.objects.create(
                 employee=employee,
@@ -79,8 +79,9 @@ class AssignExistingEmployeeView(LoginRequiredMixin, View):
             post.status = Posts.STATUS_OCCUPIED
             post.full_clean()
             post.save()
-            employee.is_active = True
-            employee.save(update_fields=['is_active'])
+            # обновляем статус сотрудника на активный
+            employee.status = Employees.STATUS_ACTIVE
+            employee.save(update_fields=['status', 'is_active'])
             PositionHistory.objects.create(
                 employee=employee,
                 post=post,
@@ -189,17 +190,19 @@ class FreePositionView(LoginRequiredMixin, View):
         form = FreePositionForm(request.POST)
         if form.is_valid():
             end_date = form.cleaned_data['end_date']
+            employee_status = form.cleaned_data['employee_status']
 
             # прекращаем активную запись history
             PositionHistory.objects.filter(employee=employee, post=post, end_date__isnull=True).update(end_date=end_date)
 
-            # увольняем: позицию освобождаем, сотрудника делаем неактивным
+            # освобождаем позицию
             post.employee = None
             post.status = Posts.STATUS_VACANT
             post.save()
 
-            employee.is_active = False
-            employee.save(update_fields=['is_active'])
+            # устанавливаем статус сотрудника
+            employee.status = employee_status
+            employee.save(update_fields=['status', 'is_active'])
 
             PositionHistory.objects.create(
                 employee=employee,
@@ -209,7 +212,8 @@ class FreePositionView(LoginRequiredMixin, View):
                 end_date=end_date,
             )
 
-            messages.success(request, 'Позиция освобождена, сотрудник уволен.')
+            status_display = dict(Employees.STATUS_CHOICES).get(employee_status, employee_status)
+            messages.success(request, f'Позиция освобождена, сотруднику установлен статус: {status_display}.')
             return redirect('hr:post_detail', pk=pk)
         return render(request, 'hr/actions/free_position.html', {'form': form, 'post': post})
 
@@ -325,6 +329,7 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                             appointment_date_str = row.get('Дата назначения', '').strip()
                             appointment_order_date_str = row.get('Дата приказа', '').strip()
                             appointment_order_number = row.get('Номер приказа', '').strip()
+                            status_str = row.get('Статус', '').strip()
                         else:
                             # Обычный reader возвращает список
                             if len(row_data) < 4:
@@ -359,6 +364,7 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                                 appointment_date_str = row_data[8].strip() if len(row_data) > 8 else ''
                                 appointment_order_date_str = row_data[9].strip() if len(row_data) > 9 else ''
                                 appointment_order_number = row_data[10].strip() if len(row_data) > 10 else ''
+                                status_str = row_data[11].strip() if len(row_data) > 11 else ''
                             else:
                                 # Новый формат: Фамилия;Имя;Отчество;ФИО в винительном падеже;Дата рождения;Пол;Рабочий телефон;Мобильный телефон;IP-телефон;Email;Дата назначения;Дата приказа;Номер приказа
                                 full_name_accusative = row_data[3].strip() if len(row_data) > 3 else ''
@@ -371,6 +377,7 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                                 appointment_date_str = row_data[10].strip() if len(row_data) > 10 else ''
                                 appointment_order_date_str = row_data[11].strip() if len(row_data) > 11 else ''
                                 appointment_order_number = row_data[12].strip() if len(row_data) > 12 else ''
+                                status_str = row_data[13].strip() if len(row_data) > 13 else ''
                         
                         # Валидация обязательных полей
                         if not last_name or not first_name:
@@ -411,6 +418,31 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                                 errors.append(f"Строка {row_num}: неверный формат даты приказа. Ожидается YYYY-MM-DD, получено: {appointment_order_date_str}")
                                 continue
                         
+                        # Определяем статус
+                        status = Employees.STATUS_ACTIVE  # По умолчанию активен
+                        if status_str:
+                            status_lower = status_str.lower().strip()
+                            # Маппинг различных вариантов написания
+                            status_map = {
+                                'active': Employees.STATUS_ACTIVE,
+                                'активен': Employees.STATUS_ACTIVE,
+                                'dismissed': Employees.STATUS_DISMISSED,
+                                'уволен': Employees.STATUS_DISMISSED,
+                                'temporary_absence': Employees.STATUS_TEMPORARY_ABSENCE,
+                                'временно отсутствует': Employees.STATUS_TEMPORARY_ABSENCE,
+                                'временно отсутствует': Employees.STATUS_TEMPORARY_ABSENCE,
+                            }
+                            if status_lower in status_map:
+                                status = status_map[status_lower]
+                            else:
+                                # Пытаемся найти по ключу из choices
+                                valid_statuses = [choice[0] for choice in Employees.STATUS_CHOICES]
+                                if status_lower in valid_statuses:
+                                    status = status_lower
+                                else:
+                                    errors.append(f"Строка {row_num}: неверное значение статуса. Допустимые значения: active, dismissed, temporary_absence. Получено: {status_str}")
+                                    continue
+                        
                         # Создаем сотрудника
                         employee = Employees.objects.create(
                             last_name=last_name,
@@ -426,7 +458,7 @@ class EmployeeCSVImportView(LoginRequiredMixin, View):
                             appointment_date=appointment_date,
                             appointment_order_date=appointment_order_date,
                             appointment_order_number=appointment_order_number if appointment_order_number else '',
-                            is_active=True
+                            status=status
                         )
                         imported += 1
                         
@@ -473,11 +505,11 @@ class EmployeeCSVTemplateView(LoginRequiredMixin, View):
         writer = csv.writer(response, delimiter=';')
         
         # Записываем заголовки
-        writer.writerow(['Фамилия', 'Имя', 'Отчество', 'ФИО в винительном падеже', 'Дата рождения', 'Пол', 'Рабочий телефон', 'Мобильный телефон', 'IP-телефон', 'Email', 'Дата назначения', 'Дата приказа', 'Номер приказа'])
+        writer.writerow(['Фамилия', 'Имя', 'Отчество', 'ФИО в винительном падеже', 'Дата рождения', 'Пол', 'Рабочий телефон', 'Мобильный телефон', 'IP-телефон', 'Email', 'Дата назначения', 'Дата приказа', 'Номер приказа', 'Статус'])
         
         # Добавляем пример данных
-        writer.writerow(['Иванов', 'Иван', 'Иванович', 'Иванова Ивана Ивановича', '1990-05-15', 'M', '+74951234567', '+79001234567', '022010066', 'ivanov@example.com', '2024-01-15', '2024-01-10', '123-ОД'])
-        writer.writerow(['Петрова', 'Мария', 'Сергеевна', 'Петрову Марию Сергеевну', '1985-03-20', 'F', '+74959876543', '+79009876543', '022010067', 'petrova@example.com', '2024-02-01', '2024-01-25', '45-ОД'])
+        writer.writerow(['Иванов', 'Иван', 'Иванович', 'Иванова Ивана Ивановича', '1990-05-15', 'M', '+74951234567', '+79001234567', '022010066', 'ivanov@example.com', '2024-01-15', '2024-01-10', '123-ОД', 'active'])
+        writer.writerow(['Петрова', 'Мария', 'Сергеевна', 'Петрову Марию Сергеевну', '1985-03-20', 'F', '+74959876543', '+79009876543', '022010067', 'petrova@example.com', '2024-02-01', '2024-01-25', '45-ОД', 'active'])
         
         return response
 

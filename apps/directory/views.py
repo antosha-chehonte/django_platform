@@ -2,7 +2,7 @@ import re
 from django.views.generic import ListView
 from django.db.models import Q
 
-from apps.hr.models import Posts
+from apps.hr.models import Posts, Employees
 
 
 class DirectoryListView(ListView):
@@ -12,10 +12,10 @@ class DirectoryListView(ListView):
     context_object_name = 'posts'
 
     def get_queryset(self):
-        # Получаем только занятые позиции с активными сотрудниками
+        # Получаем только занятые позиции с активными сотрудниками (исключаем уволенных и временно отсутствующих)
         queryset = Posts.objects.filter(
             status=Posts.STATUS_OCCUPIED,
-            employee__is_active=True,
+            employee__status=Employees.STATUS_ACTIVE,
             is_active=True
         ).select_related('department', 'postname', 'employee')
 

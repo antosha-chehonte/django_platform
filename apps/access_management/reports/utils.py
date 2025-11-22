@@ -185,8 +185,13 @@ def get_employees_without_signature(department_id=None, active_only=True):
     Returns:
         dict: {department: [employees]}
     """
-    # Найти всех активных сотрудников
-    employees = Employees.objects.filter(is_active=active_only)
+    # Найти сотрудников по статусу
+    if active_only:
+        # Только активные сотрудники (исключаем уволенных и временно отсутствующих)
+        employees = Employees.objects.filter(status=Employees.STATUS_ACTIVE)
+    else:
+        # Все сотрудники, включая уволенных и временно отсутствующих
+        employees = Employees.objects.all()
     
     if department_id:
         employees = employees.filter(

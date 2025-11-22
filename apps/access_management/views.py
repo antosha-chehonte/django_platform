@@ -66,7 +66,8 @@ class SystemAccessListView(LoginRequiredMixin, ListView):
         context['employee_filter'] = self.request.GET.get('employee', '')
         context['system_filter'] = self.request.GET.get('system', '')
         context['status_filter'] = self.request.GET.get('status', '')
-        context['employees'] = Employees.objects.filter(is_active=True).order_by('last_name', 'first_name')
+        # Показываем только активных сотрудников (исключаем уволенных и временно отсутствующих)
+        context['employees'] = Employees.objects.filter(status=Employees.STATUS_ACTIVE).order_by('last_name', 'first_name')
         from apps.reference.models import ITAsset
         context['systems'] = ITAsset.objects.filter(is_active=True).order_by('name')
         context['status_choices'] = SystemAccess.STATUS_CHOICES
