@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h3>Массовая загрузка сертификатов</h3>
+
+<div class="alert alert-info mb-4">
+    <h5 class="alert-heading">Информация о массовой загрузке</h5>
+    <p class="mb-2">
+        Вы можете загрузить несколько сертификатов одновременно. Система автоматически:
+    </p>
+    <ul class="mb-0">
+        <li>Распарсит каждый файл сертификата</li>
+        <li>Извлечет данные (серийный номер, отпечаток, дату окончания)</li>
+        <li>Найдет сотрудника по ФИО из сертификата</li>
+        <li>Создаст записи для найденных сотрудников</li>
+        <li>Переименует файлы по маске: <code>фамилия_имя_отчество__YYYY_MM_DD.расширение</code></li>
+    </ul>
+    <p class="mb-0 mt-2">
+        <strong>Важно:</strong> Сертификаты, для которых сотрудник не найден в базе данных, будут пропущены.
+    </p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="{{ form.certificate_files.id_for_label }}" class="form-label">
+                    {{ form.certificate_files.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.certificate_files }}
+                {% if form.certificate_files.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.certificate_files.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if form.certificate_files.help_text %}
+                    <div class="form-text">{{ form.certificate_files.help_text }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.certificate_type.id_for_label }}" class="form-label">
+                    {{ form.certificate_type.label }}
+                </label>
+                {{ form.certificate_type }}
+                {% if form.certificate_type.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.certificate_type.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if form.certificate_type.help_text %}
+                    <div class="form-text">{{ form.certificate_type.help_text }}</div>
+                {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">Загрузить сертификаты</button>
+            <a href="{% url 'access:digital_signature_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </div>
+</form>
+
+<div class="mt-3">
+    <a href="{% url 'access:digital_signature_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Вернуться к списку
+    </a>
+</div>
+{% endblock %}
+

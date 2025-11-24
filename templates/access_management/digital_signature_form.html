@@ -206,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const aliasInput = document.getElementById('{{ form.certificate_alias.id_for_label }}');
                         const expiryInput = document.getElementById('{{ form.expiry_date.id_for_label }}');
                         const statusSelect = document.getElementById('{{ form.status.id_for_label }}');
+                        const employeeSelect = document.getElementById('{{ form.employee.id_for_label }}');
                         
                         if (serialInput && !serialInput.value) {
                             serialInput.value = data.data.certificate_serial;
@@ -228,10 +229,24 @@ document.addEventListener('DOMContentLoaded', function() {
                             statusSelect.classList.add('border-success');
                         }
                         
+                        // Автоматически выбираем сотрудника, если он найден
+                        if (employeeSelect && data.data.employee_id && !employeeSelect.value) {
+                            employeeSelect.value = data.data.employee_id;
+                            employeeSelect.classList.add('border-success');
+                        }
+                        
+                        // Формируем сообщение об успехе
+                        let successMessage = '<strong>✅ Успешно!</strong> Поля автоматически заполнены данными из сертификата.';
+                        if (data.data.employee_id && data.data.employee_name) {
+                            successMessage += '<br><strong>Сотрудник:</strong> ' + data.data.employee_name + ' (выбран автоматически)';
+                        } else if (data.data.subject_name) {
+                            successMessage += '<br><strong>Владелец сертификата:</strong> ' + data.data.subject_name + ' (сотрудник не найден в базе)';
+                        }
+                        
                         // Показываем сообщение об успехе
                         const successAlert = document.createElement('div');
                         successAlert.className = 'alert alert-success mt-2';
-                        successAlert.innerHTML = '<strong>✅ Успешно!</strong> Поля автоматически заполнены данными из сертификата.';
+                        successAlert.innerHTML = successMessage;
                         certificateFileInput.parentElement.appendChild(successAlert);
                         
                         // Удаляем сообщение через 5 секунд
@@ -239,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Убираем зеленую рамку через 3 секунды
                         setTimeout(() => {
-                            [serialInput, aliasInput, expiryInput, statusSelect].forEach(input => {
+                            [serialInput, aliasInput, expiryInput, statusSelect, employeeSelect].forEach(input => {
                                 if (input) input.classList.remove('border-success');
                             });
                         }, 3000);

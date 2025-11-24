@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h3>Результаты массовой загрузки сертификатов</h3>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ total_files }}</h5>
+                <p class="card-text">Всего файлов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ success_count }}</h5>
+                <p class="card-text">Успешно загружено</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ skipped_count }}</h5>
+                <p class="card-text">Пропущено</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-danger">{{ errors_count|add:duplicates_count }}</h5>
+                <p class="card-text">Ошибок и дубликатов</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Успешно загружено -->
+{% if results.success %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-check-circle"></i> Успешно загружено ({{ success_count }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Файл</th>
+                        <th>Сотрудник</th>
+                        <th>Серийный номер</th>
+                        <th>Новое имя файла</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results.success %}
+                    <tr>
+                        <td><code>{{ item.filename }}</code></td>
+                        <td><strong>{{ item.employee }}</strong></td>
+                        <td><code>{{ item.certificate_serial }}</code></td>
+                        <td><code>{{ item.new_filename }}</code></td>
+                        <td>
+                            <a href="{% url 'access:digital_signature_detail' item.signature_id %}" 
+                               class="btn btn-sm btn-outline-primary" title="Просмотр">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Пропущено -->
+{% if results.skipped %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="bi bi-exclamation-triangle"></i> Пропущено ({{ skipped_count }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <strong>Причина:</strong> Сотрудник не найден в базе данных по ФИО из сертификата.
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Файл</th>
+                        <th>ФИО из сертификата</th>
+                        <th>Серийный номер</th>
+                        <th>Причина</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results.skipped %}
+                    <tr>
+                        <td><code>{{ item.filename }}</code></td>
+                        <td><strong>{{ item.subject_name|default:"—" }}</strong></td>
+                        <td><code>{{ item.certificate_serial }}</code></td>
+                        <td>{{ item.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Дубликаты -->
+{% if results.duplicates %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-info-circle"></i> Дубликаты ({{ duplicates_count }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong>Причина:</strong> Сертификат с таким серийным номером уже существует в базе данных.
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Файл</th>
+                        <th>Сотрудник</th>
+                        <th>Серийный номер</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results.duplicates %}
+                    <tr>
+                        <td><code>{{ item.filename }}</code></td>
+                        <td><strong>{{ item.employee }}</strong></td>
+                        <td><code>{{ item.certificate_serial }}</code></td>
+                        <td>
+                            <a href="{% url 'access:digital_signature_detail' item.existing_id %}" 
+                               class="btn btn-sm btn-outline-primary" title="Просмотр существующего">
+                                <i class="bi bi-eye"></i> Просмотр
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Ошибки -->
+{% if results.errors %}
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-x-circle"></i> Ошибки обработки ({{ errors_count }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Файл</th>
+                        <th>Ошибка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results.errors %}
+                    <tr>
+                        <td><code>{{ item.filename }}</code></td>
+                        <td class="text-danger">{{ item.error }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Если нет результатов -->
+{% if not results.success and not results.skipped and not results.errors and not results.duplicates %}
+<div class="alert alert-info">
+    <h5>Нет данных для отображения</h5>
+    <p>Файлы не были обработаны или результаты были очищены.</p>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'access:digital_signature_list' %}" class="btn btn-primary">
+        <i class="bi bi-list"></i> Вернуться к списку сертификатов
+    </a>
+    <a href="{% url 'access:bulk_certificate_upload' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-upload"></i> Загрузить еще
+    </a>
+</div>
+{% endblock %}
+

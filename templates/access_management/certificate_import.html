@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Импорт сертификатов из HTML</h2>
+    <div>
+        <a href="{% url 'access:digital_signature_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Загрузка HTML-файла</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <label for="{{ form.html_file.id_for_label }}" class="form-label">
+                    {{ form.html_file.label }}
+                    {% if form.html_file.field.required %}<span class="text-danger">*</span>{% endif %}
+                </label>
+                {{ form.html_file }}
+                {% if form.html_file.help_text %}
+                    <div class="form-text">{{ form.html_file.help_text }}</div>
+                {% endif %}
+                {% if form.html_file.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {% for error in form.html_file.errors %}
+                            <div class="mb-0">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.certificate_type.id_for_label }}" class="form-label">
+                    {{ form.certificate_type.label }}
+                </label>
+                {{ form.certificate_type }}
+                {% if form.certificate_type.help_text %}
+                    <div class="form-text">{{ form.certificate_type.help_text }}</div>
+                {% endif %}
+                {% if form.certificate_type.errors %}
+                    <div class="text-danger">
+                        {% for error in form.certificate_type.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Информация:</strong> Система автоматически найдет сотрудников по ФИО из HTML-файла.
+                Сертификаты, для которых сотрудник не найден или уже существует дубликат, будут пропущены.
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-upload"></i> Импортировать
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if results %}
+<!-- Результаты импорта -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Результаты импорта</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-success">{{ imported_count }}</h3>
+                        <p class="mb-0">Импортировано</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-warning">{{ skipped_employee_count }}</h3>
+                        <p class="mb-0">Сотрудник не найден</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-info">{{ skipped_duplicate_count }}</h3>
+                        <p class="mb-0">Дубликаты</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="text-secondary">{{ total_found }}</h3>
+                        <p class="mb-0">Всего найдено</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Успешно импортировано -->
+        {% if results.imported %}
+        <div class="mb-4">
+            <h5 class="text-success">Успешно импортировано ({{ imported_count }})</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Серийный номер</th>
+                            <th>Сотрудник</th>
+                            <th>Дата окончания</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results.imported %}
+                        <tr>
+                            <td><strong>{{ item.certificate_number }}</strong></td>
+                            <td>{{ item.employee }}</td>
+                            <td>{{ item.expiry_date|date:"d.m.Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Пропущено: сотрудник не найден -->
+        {% if results.skipped_employee_not_found %}
+        <div class="mb-4">
+            <h5 class="text-warning">Пропущено: сотрудник не найден ({{ skipped_employee_count }})</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Серийный номер</th>
+                            <th>ФИО из HTML</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results.skipped_employee_not_found %}
+                        <tr>
+                            <td><strong>{{ item.certificate_number }}</strong></td>
+                            <td>{{ item.owner_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Пропущено: дубликаты -->
+        {% if results.skipped_duplicate %}
+        <div class="mb-4">
+            <h5 class="text-info">Пропущено: дубликаты ({{ skipped_duplicate_count }})</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Серийный номер</th>
+                            <th>Сотрудник</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results.skipped_duplicate %}
+                        <tr>
+                            <td><strong>{{ item.certificate_number }}</strong></td>
+                            <td>{{ item.owner_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Пропущено: тип сертификата не найден -->
+        {% if results.skipped_type_not_found %}
+        <div class="mb-4">
+            <h5 class="text-danger">Пропущено: тип сертификата не найден ({{ skipped_type_count }})</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Серийный номер</th>
+                            <th>Сотрудник</th>
+                            <th>Тип из HTML</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results.skipped_type_not_found %}
+                        <tr>
+                            <td><strong>{{ item.certificate_number }}</strong></td>
+                            <td>{{ item.owner_name }}</td>
+                            <td>{{ item.type_text }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Пропущено: ошибки парсинга -->
+        {% if results.skipped_parse_error %}
+        <div class="mb-4">
+            <h5 class="text-danger">Пропущено: ошибки обработки ({{ skipped_error_count }})</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Серийный номер</th>
+                            <th>Сотрудник</th>
+                            <th>Ошибка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results.skipped_parse_error %}
+                        <tr>
+                            <td><strong>{{ item.certificate_number }}</strong></td>
+                            <td>{{ item.owner_name }}</td>
+                            <td class="text-danger">{{ item.error }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if not results.imported and not results.skipped_employee_not_found and not results.skipped_duplicate and not results.skipped_type_not_found and not results.skipped_parse_error %}
+        <div class="alert alert-info">
+            В файле не найдено сертификатов для обработки.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+

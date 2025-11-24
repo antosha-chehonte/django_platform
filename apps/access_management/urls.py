@@ -23,6 +23,9 @@ urlpatterns = [
     path('signatures/<int:pk>/delete/', views.DigitalSignatureDeleteView.as_view(), name='digital_signature_delete'),
     path('signatures/<int:pk>/download/', views.DigitalSignatureDownloadView.as_view(), name='digital_signature_download'),
     path('signatures/parse-certificate/', views.CertificateParseAjaxView.as_view(), name='certificate_parse_ajax'),
+    path('signatures/bulk-upload/', views.BulkCertificateUploadView.as_view(), name='bulk_certificate_upload'),
+    path('signatures/bulk-upload/results/', views.BulkCertificateUploadResultsView.as_view(), name='bulk_certificate_upload_results'),
+    path('signatures/import/', views.CertificateImportView.as_view(), name='digital_signature_import'),
     
     # Отчеты
     path('reports/', reports.ReportsHomeView.as_view(), name='reports_home'),

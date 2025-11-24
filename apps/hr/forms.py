@@ -1,10 +1,47 @@
 from django import forms
+from django.forms.widgets import DateInput
 
 from .models import Employees, Posts
 
 
+class DateInputWidget(DateInput):
+    """Кастомный виджет для дат, который правильно форматирует значение для HTML5 date input"""
+    input_type = 'date'
+    
+    def format_value(self, value):
+        """Преобразует объект date в строку формата YYYY-MM-DD"""
+        if value is None:
+            return ''
+        if hasattr(value, 'strftime'):
+            return value.strftime('%Y-%m-%d')
+        return str(value)
+
+
 class HireNewEmployeeForm(forms.ModelForm):
-    start_date = forms.DateField(label='Дата начала', widget=forms.DateInput(attrs={'type': 'date'}))
+    start_date = forms.DateField(
+        label='Дата начала',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=True
+    )
+    birth_date = forms.DateField(
+        label='Дата рождения',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=True
+    )
+    appointment_date = forms.DateField(
+        label='Дата назначения на должность',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=False
+    )
+    appointment_order_date = forms.DateField(
+        label='Дата приказа о назначении',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=False
+    )
 
     class Meta:
         model = Employees
@@ -14,14 +51,11 @@ class HireNewEmployeeForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'middle_name': forms.TextInput(attrs={'class': 'form-control'}),
             'full_name_accusative': forms.TextInput(attrs={'class': 'form-control'}),
-            'birth_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'gender': forms.Select(attrs={'class': 'form-select'}),
             'work_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'mobile_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'ip_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'appointment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'appointment_order_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'appointment_order_number': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
@@ -123,6 +157,25 @@ class FreePositionForm(forms.Form):
 
 
 class EmployeesForm(forms.ModelForm):
+    birth_date = forms.DateField(
+        label='Дата рождения',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=True
+    )
+    appointment_date = forms.DateField(
+        label='Дата назначения на должность',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=False
+    )
+    appointment_order_date = forms.DateField(
+        label='Дата приказа о назначении',
+        widget=DateInputWidget(attrs={'class': 'form-control'}),
+        input_formats=['%Y-%m-%d', '%d.%m.%Y', '%d/%m/%Y'],
+        required=False
+    )
+    
     class Meta:
         model = Employees
         fields = ['last_name', 'first_name', 'middle_name', 'full_name_accusative', 'birth_date', 'gender', 'work_phone', 'mobile_phone', 'ip_phone', 'email', 'appointment_date', 'appointment_order_date', 'appointment_order_number', 'status']
@@ -131,14 +184,11 @@ class EmployeesForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'middle_name': forms.TextInput(attrs={'class': 'form-control'}),
             'full_name_accusative': forms.TextInput(attrs={'class': 'form-control'}),
-            'birth_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'gender': forms.Select(attrs={'class': 'form-select'}),
             'work_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'mobile_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'ip_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'appointment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'appointment_order_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'appointment_order_number': forms.TextInput(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
         }

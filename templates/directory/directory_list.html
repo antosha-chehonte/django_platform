@@ -69,6 +69,7 @@
                     <th>Сотрудник</th>
                     <th>Рабочий телефон</th>
                     <th>Мобильный телефон</th>
+                    <th>IP-телефон</th>
                     <th>Email</th>
                   </tr>
                 </thead>
@@ -89,6 +90,13 @@
                     <td>
                       {% if post.employee.mobile_phone %}
                         <a href="tel:{{ post.employee.mobile_phone }}">{{ post.employee.mobile_phone }}</a>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if post.employee.ip_phone %}
+                        <a href="tel:{{ post.employee.ip_phone }}">{{ post.employee.ip_phone }}</a>
                       {% else %}
                         <span class="text-muted">—</span>
                       {% endif %}

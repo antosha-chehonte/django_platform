@@ -5,6 +5,27 @@ from apps.reference.models import CertificateType
 from .utils.certificate_parser import parse_certificate_from_django_file, CertificateParseError
 
 
+class MultipleFileInput(forms.FileInput):
+    """Кастомный виджет для множественной загрузки файлов"""
+    def __init__(self, attrs=None):
+        # Убираем multiple из attrs перед передачей в родительский класс
+        # чтобы избежать ошибки валидации
+        if attrs and 'multiple' in attrs:
+            attrs = attrs.copy()
+            attrs.pop('multiple', None)
+        super().__init__(attrs=attrs)
+        # Сохраняем, что нужно добавить multiple
+        self.allow_multiple = True
+    
+    def render(self, name, value, attrs=None, renderer=None):
+        # Добавляем атрибут multiple при рендеринге
+        if attrs is None:
+            attrs = {}
+        attrs = attrs.copy()
+        attrs['multiple'] = True
+        return super().render(name, value, attrs, renderer)
+
+
 class SystemAccessForm(forms.ModelForm):
     class Meta:
         model = SystemAccess
@@ -122,4 +143,64 @@ class DigitalSignatureForm(forms.ModelForm):
                 )
         
         return cleaned_data
+
+
+class BulkCertificateUploadForm(forms.Form):
+    """Форма для массовой загрузки сертификатов"""
+    certificate_files = forms.FileField(
+        label='Файлы сертификатов',
+        help_text='Выберите один или несколько файлов сертификатов (.cer или .pfx). Максимальный размер каждого файла: 1 МБ',
+        widget=MultipleFileInput(attrs={
+            'class': 'form-control',
+            'accept': '.cer,.pfx'
+        }),
+        required=False  # Валидация будет в view
+    )
+    certificate_type = forms.ModelChoiceField(
+        queryset=CertificateType.objects.filter(is_active=True),
+        label='Тип сертификата',
+        help_text='Выберите тип сертификата для всех загружаемых файлов (опционально)',
+        required=False,
+        empty_label='-- Не указан --',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+
+class CertificateImportForm(forms.Form):
+    """Форма для импорта сертификатов из HTML-файла"""
+    html_file = forms.FileField(
+        label='HTML-файл',
+        help_text='Выберите HTML-файл с информацией о сертификатах',
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.html,.htm'
+        }),
+        required=True
+    )
+    certificate_type = forms.ModelChoiceField(
+        queryset=CertificateType.objects.filter(is_active=True),
+        label='Тип сертификата (опционально)',
+        help_text='Если указан, будет использован для всех сертификатов вместо типа из HTML',
+        required=False,
+        empty_label='-- Использовать тип из HTML --',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    def clean_html_file(self):
+        """Валидация HTML-файла"""
+        html_file = self.cleaned_data.get('html_file')
+        
+        if not html_file:
+            raise ValidationError('Необходимо выбрать HTML-файл')
+        
+        # Проверка расширения файла
+        filename = html_file.name.lower()
+        if not (filename.endswith('.html') or filename.endswith('.htm')):
+            raise ValidationError('Файл должен иметь расширение .html или .htm')
+        
+        # Проверка, что файл не пустой
+        if html_file.size == 0:
+            raise ValidationError('Файл не может быть пустым')
+        
+        return html_file
 

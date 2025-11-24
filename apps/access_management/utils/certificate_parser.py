@@ -227,3 +227,49 @@ def get_certificate_thumbprint(file_content: bytes) -> str:
     data = parse_certificate_file(file_content)
     return data['certificate_alias']
 
+
+def generate_certificate_filename(employee, expiry_date, original_filename):
+    """
+    Генерирует имя файла сертификата по маске: фамилия_имя_отчество__YYYY_MM_DD.расширение
+    
+    Args:
+        employee: Объект Employees
+        expiry_date: datetime.date - дата окончания действия сертификата
+        original_filename: str - оригинальное имя файла для получения расширения
+    
+    Returns:
+        str: Имя файла в формате "фамилия_имя_отчество__YYYY_MM_DD.расширение"
+    """
+    import re
+    from datetime import date
+    
+    # Формируем ФИО
+    last_name = employee.last_name.strip() if employee.last_name else ''
+    first_name = employee.first_name.strip() if employee.first_name else ''
+    middle_name = employee.middle_name.strip() if employee.middle_name else ''
+    
+    # Объединяем ФИО, заменяя пробелы на подчеркивания
+    name_parts = [part for part in [last_name, first_name, middle_name] if part]
+    name_part = '_'.join(name_parts)
+    
+    # Удаляем специальные символы, оставляем только буквы, цифры, дефисы и подчеркивания
+    name_part = re.sub(r'[^\w\-]', '', name_part)
+    
+    # Формируем дату в формате YYYY_MM_DD
+    if isinstance(expiry_date, date):
+        date_part = expiry_date.strftime('%Y_%m_%d')
+    else:
+        date_part = expiry_date.strftime('%Y_%m_%d') if hasattr(expiry_date, 'strftime') else str(expiry_date)
+    
+    # Получаем расширение из оригинального имени файла
+    extension = ''
+    if original_filename and '.' in original_filename:
+        extension = '.' + original_filename.split('.')[-1].lower()
+    else:
+        extension = '.cer'  # По умолчанию
+    
+    # Формируем итоговое имя: фамилия_имя_отчество__YYYY_MM_DD.расширение
+    filename = f"{name_part}__{date_part}{extension}"
+    
+    return filename
+

@@ -4,9 +4,17 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Цифровые подписи</h2>
-    <a href="{% url 'access:digital_signature_create' %}" class="btn btn-success">
-        Добавить подпись
-    </a>
+    <div>
+        <a href="{% url 'access:bulk_certificate_upload' %}" class="btn btn-primary me-2">
+            <i class="bi bi-upload"></i> Добавить сертификаты
+        </a>
+        <a href="{% url 'access:digital_signature_import' %}" class="btn btn-info me-2">
+            <i class="bi bi-file-earmark-code"></i> Импорт из HTML
+        </a>
+        <a href="{% url 'access:digital_signature_create' %}" class="btn btn-success">
+            Добавить подпись
+        </a>
+    </div>
 </div>
 
 <!-- Фильтры и поиск -->
